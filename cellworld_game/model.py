@@ -2,7 +2,7 @@ import math
 import time
 import typing
 import shapely as sp
-from .agent import Agent, AgentDynamics
+from .agent import Agent
 from .visibility import Visibility
 
 

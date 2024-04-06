@@ -49,7 +49,7 @@ class Environment(Env):
                           navigation=self.navigation,
                           actions=self.loader.full_action_list)
         self.model.add_agent("prey", self.prey)
-        self.view = View(model=self.model)
+        self.view = None
 
     def get_observation(self):
         return self.prey.get_observation()
@@ -74,4 +74,6 @@ class Environment(Env):
         return obs, {}
 
     def render(self):
+        if self.view is None:
+            View(model=self.model)
         self.view.draw()

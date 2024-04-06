@@ -29,7 +29,6 @@ class NavigationAgent(Agent):
             self.path.pop(0)
         else:
             self.next_step = None
-        print("path", self.path)
 
     def reset(self):
         self.destination = None
@@ -40,7 +39,6 @@ class NavigationAgent(Agent):
         Agent.start(self, observation)
 
     def navigate(self, delta_t: float):
-        print("navigating")
         if self.next_step is not None:
             distance_error = distance(src=self.state.location,
                                       dst=self.next_step)
@@ -62,7 +60,6 @@ class NavigationAgent(Agent):
                                               dst=self.next_step)
             direction_error = direction_difference(direction1=self.state.direction,
                                                    direction2=destination_direction)
-            print(direction_error)
             normalized_direction_error = direction_error_normalization(direction_error=direction_error)
 
             self.dynamics.forward_speed = self.max_forward_speed * normalized_direction_error * normalized_distance_error
