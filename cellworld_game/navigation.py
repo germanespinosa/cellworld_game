@@ -46,7 +46,10 @@ class Navigation:
         current = src_index
         path_indexes = [current]
         while current is not None and current != dst_index:
-            current = self.paths[current][dst_index]
+            next = self.paths[current][dst_index]
+            if next == current:
+                break
+            current = next
             path_indexes.append(current)
         return self.clear_path(src=src,
                                path=[self.locations[step_index]
