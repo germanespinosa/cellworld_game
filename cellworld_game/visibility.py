@@ -2,7 +2,8 @@ import bisect
 import math
 import typing
 import shapely as sp
-from .util import polygons_to_sides, polygon_to_linestrings, theta_in_between
+from .util import polygons_to_sides, theta_in_between
+from .geometry import distance2, move, atan2
 
 
 class Visibility:
@@ -15,7 +16,7 @@ class Visibility:
                           src: sp.Point):
         return sorted([(side_number,
                         vertices,
-                        src.distance(self.walls_centroids[side_number]))
+                        distance2(src, self.walls_centroids[side_number]))
                        for side_number, vertices
                        in enumerate(self.walls_vertices)],
                       key=lambda item: item[2])
@@ -28,7 +29,7 @@ class Visibility:
         if walls_by_distance is None:
             walls_by_distance = self.walls_by_distance(src=src)
 
-        ray_end = (src.x + math.cos(theta) * self.max_distance, src.y + math.sin(theta) * self.max_distance)
+        ray_end = move(src, theta, self.max_distance)
         ray = sp.LineString([src, ray_end])
 
         for side_number, vertices, distance in walls_by_distance:
@@ -44,7 +45,7 @@ class Visibility:
         if walls_by_distance is None:
             walls_by_distance = self.walls_by_distance(src=src)
 
-        target_distance = src.distance(dst)
+        target_distance = distance2(src,dst)
         ray = sp.LineString([src, dst])
         for side_number, vertices, distance in walls_by_distance:
             if distance >= target_distance:
@@ -52,17 +53,6 @@ class Visibility:
             if ray.intersects(self.walls[side_number]):
                 return False
         return True
-
-    @staticmethod
-    def theta(src: sp.Point,
-              dst: sp.Point):
-        return math.atan2(dst.y - src.y, dst.x - src.x)
-
-    @staticmethod
-    def move(src: sp.Point,
-             theta: float,
-             dist: float):
-        return sp.Point(src.x + math.cos(theta) * dist, src.y + math.sin(theta) * dist)
 
     def get_visibility_polygon(self,
                                location: typing.Tuple[float, float],
@@ -100,10 +90,10 @@ class Visibility:
         # contains the cached visibility information, if None, it must be computed
         vertices_visible: typing.List[typing.Optional[bool]] = []
         for vertex in self.vertices:
-            vertex_theta = self.theta(start, vertex)
+            vertex_theta = atan2(start, vertex)
             vertices_theta.append(vertex_theta)
             if theta_in_view_field(vertex_theta):
-                vertices_distances.append(start.distance(vertex))
+                vertices_distances.append(distance2(start, vertex))
                 vertices_visible.append(None)
             else:
                 vertices_distances.append(None)
@@ -159,7 +149,7 @@ class Visibility:
                               vertex_number,
                               sorted_sides) -> bool:
             dst = self.vertices[vertex_number]
-            target_distance = src.distance(dst)
+            target_distance = distance2(src, dst)
             ray = sp.LineString([src, dst])
             for side_number, vertices, distance in sorted_sides:
                 if vertex_number in vertices:

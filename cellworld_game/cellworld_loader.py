@@ -1,6 +1,7 @@
 import typing
 import cellworld as cw
-from cellworld_game import create_hexagon
+from .util import create_hexagon
+from .navigation import Navigation
 
 
 class CellWorldLoader:
@@ -14,7 +15,11 @@ class CellWorldLoader:
         paths = cw.Paths(builder=paths_builder, world=self.world)
         cellmap = cw.Cell_map(self.world.configuration.cell_coordinates)
 
-        self.locations = [tuple(c.location.get_values()) for c in self.world.cells]
+        self.locations: typing.List[typing.Optional[typing.Tuple[float, float]]] = [None
+                                                                                    if c.occluded
+                                                                                    else tuple(c.location.get_values())
+                                                                                    for c in self.world.cells]
+
         locations_paths: typing.List[typing.List[typing.Optional[int]]] = [[None for _ in range(len(self.world.cells))]
                                                                             for _ in range(len(self.world.cells))]
         for src_cell in self.world.cells:
@@ -40,9 +45,13 @@ class CellWorldLoader:
         self.full_action_list = self.open_locations
 
         lppo_cells = cw.Cell_group_builder.get_from_name("hexagonal",
-                                                          world_name,
-                                                          "lppo")
+                                                         world_name,
+                                                         "lppo")
 
         self.tlppo_action_list = [tuple(self.world.cells[sc].location.get_values()) for sc in lppo_cells]
 
+        cell_visibility = cw.get_resource("graph", "hexagonal", world_name, "cell_visibility")
 
+        self.navigation = Navigation(locations=self.locations,
+                                     paths=self.paths,
+                                     visibility=cell_visibility)

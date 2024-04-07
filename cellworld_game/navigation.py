@@ -6,37 +6,39 @@ import shapely as sp
 
 class Navigation:
     def __init__(self,
-                 locations: typing.List[typing.Tuple[float, float]],
+                 locations: typing.List[typing.Optional[typing.Tuple[float, float]]],
                  paths: typing.List[typing.List[int]],
-                 visibility: Visibility):
-        self.locations: typing.List[typing.Tuple[float, float]] = locations
-        self.paths: typing.List[typing.List[int]] = paths
-        self.visibility: Visibility = visibility
+                 visibility: typing.List[typing.List[typing.List[int]]]):
+        self.locations = locations
+        self.paths = paths
+        self.visibility = visibility
 
     def closest_location(self,
                          location: typing.Tuple[float, float]) -> int:
         min_dist2 = math.inf
         closest = None
         for i, l in enumerate(self.locations):
+            if l is None:
+                continue
             dist2 = (l[0] - location[0]) ** 2 + (l[1] - location[1]) ** 2
             if dist2 < min_dist2:
                 closest = i
                 min_dist2 = dist2
         return closest
 
-    def clear_path(self, src, path):
+    def clear_path(self, path_indexes):
+        src = path_indexes[0]
         clear_path = []
         last_step = src
-        src_point = sp.Point(last_step)
-        walls_by_distance = self.visibility.walls_by_distance(src_point)
-        for step in path:
-            if not self.visibility.line_of_side(src=src_point, dst=sp.Point(step), walls_by_distance=walls_by_distance):
+        src_point = last_step
+        for step in path_indexes:
+            is_visible = step in self.visibility[src_point]
+            if not is_visible:
                 clear_path.append(last_step)
-                src_point = sp.Point(last_step)
-                walls_by_distance = self.visibility.walls_by_distance(src_point)
+                src_point = last_step
             last_step = step
-        clear_path.append(path[-1])
-        return clear_path
+        clear_path.append(path_indexes[-1])
+        return [self.locations[s] for s in clear_path]
 
     def get_path(self,
                  src: typing.Tuple[float, float],
@@ -51,7 +53,4 @@ class Navigation:
                 break
             current = next
             path_indexes.append(current)
-        return self.clear_path(src=src,
-                               path=[self.locations[step_index]
-                                     for step_index
-                                     in path_indexes])
+        return self.clear_path(path_indexes=path_indexes)

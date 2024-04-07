@@ -1,8 +1,12 @@
 import math
 import typing
-
 import shapely as sp
 import colorsys
+
+
+def distance2(point1: typing.Tuple[float, float],
+              point2: typing.Tuple[float, float]):
+    return (point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2
 
 
 def generate_distinct_colors(n):
