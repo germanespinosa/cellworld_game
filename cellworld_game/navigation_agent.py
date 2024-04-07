@@ -35,8 +35,8 @@ class NavigationAgent(Agent):
         self.next_step = None
         Agent.reset(self)
 
-    def start(self, observation: dict):
-        Agent.start(self, observation)
+    def start(self):
+        Agent.start(self)
 
     def navigate(self, delta_t: float):
         if self.next_step is not None:

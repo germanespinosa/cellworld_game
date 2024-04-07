@@ -31,13 +31,10 @@ class Environment(Env):
                            occlusions=self.loader.occlusions,
                            time_step=.1,
                            real_time=False)
-        self.navigation = Navigation(locations=self.loader.locations,
-                                     paths=self.loader.paths,
-                                     visibility=self.model.visibility)
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
                                   open_locations=self.loader.open_locations,
-                                  navigation=self.navigation)
+                                  navigation=self.loader.navigation)
             self.model.add_agent("predator", self.predator)
 
         self.prey = Mouse(start_state=AgentState(location=(.05, .5),
@@ -46,13 +43,13 @@ class Environment(Env):
                           goal_threshold=.1,
                           puff_threshold=.05,
                           puff_cool_down_time=.5,
-                          navigation=self.navigation,
+                          navigation=self.loader.navigation,
                           actions=self.loader.full_action_list)
         self.model.add_agent("prey", self.prey)
         self.view = None
 
     def get_observation(self):
-        return self.prey.get_observation()
+        return self.mouse.get_observation("prey")
 
     def set_action(self, action: int):
         self.prey.set_action(action)

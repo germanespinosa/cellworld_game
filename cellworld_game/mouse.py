@@ -2,7 +2,7 @@ import math
 import typing
 
 import pygame
-from .agent import AgentState
+from .agent import AgentState, Agent
 from .navigation import Navigation
 from .navigation_agent import NavigationAgent
 from .resources import Resources
@@ -35,7 +35,8 @@ class Mouse(NavigationAgent):
         self.puffed = False
 
     def get_observation(self):
-        return self.observation
+        observation = Agent.get_observation(self=self)
+        return self.parse_observation(observation=observation)
 
     def parse_observation(self, observation: dict):
         goal_distance = distance(self.goal_location, observation["agent_states"]["prey"][0])
@@ -44,7 +45,7 @@ class Mouse(NavigationAgent):
                               observation["agent_states"]["prey"][0][1],
                               math.radians(observation["agent_states"]["prey"][1])]
 
-        if observation["agent_states"]["predator"][0]:
+        if observation["agent_states"]["predator"]:
             predator_distance = distance(observation["agent_states"]["prey"][0],
                                          observation["agent_states"]["predator"][0])
             if self.puff_threshold <= 0:
@@ -76,13 +77,10 @@ class Mouse(NavigationAgent):
         self.state.direction = self.start_state.direction
         NavigationAgent.reset(self)
 
-    def start(self, observation: dict):
-        self.observation = self.parse_observation(observation=observation)
-        NavigationAgent.start(self,
-                              observation=observation)
+    def start(self):
+        NavigationAgent.start(self)
 
-    def step(self, delta_t: float, observation: dict):
-        self.observation = self.parse_observation(observation=observation)
+    def step(self, delta_t: float):
         self.puff_cool_down -= delta_t
         self.navigate(delta_t=delta_t)
 

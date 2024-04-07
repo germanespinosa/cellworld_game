@@ -33,8 +33,9 @@ class Robot(NavigationAgent):
     def create_polygon() -> sp.Polygon:
         return sp.Polygon([(.02, 0.013), (-.02, 0.013), (-.02, -0.013), (.02, -0.013), (.025, -0.01), (.025, 0.01)])
 
-    def step(self, delta_t: float, observation: dict):
+    def step(self, delta_t: float):
         if self.last_destination_time + 1 < time.time():
+            observation = self.get_observation()
             self.last_destination_time = time.time()
             if "prey" in observation["agent_states"] and observation["agent_states"]["prey"]:
                 self.set_destination(observation["agent_states"]["prey"][0])

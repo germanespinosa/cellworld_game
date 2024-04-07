@@ -24,13 +24,15 @@ class Model(object):
 
     def add_agent(self, name: str, agent: Agent):
         self.agents[name] = agent
+        agent.name = name
+        agent.model = self
 
     def reset(self):
         for name, agent in self.agents.items():
             agent.reset()
         observations = self.get_observations()
         for name, agent in self.agents.items():
-            agent.start(observation=observations[name])
+            agent.start()
         self.last_step = time.time()
 
     def is_valid_state(self, agent_polygon: sp.Polygon, collisions: bool) -> bool:
@@ -75,6 +77,38 @@ class Model(object):
                     observations[src_name]["agent_states"][dst_name] = None
         return observations
 
+    def get_observation(self,
+                        agent_name: str,
+                        polygonal: bool = False) -> dict:
+        observation = {}
+        src_point = sp.Point(self.agents[agent_name].state.location)
+        if polygonal:
+            visibility_polygon = self.visibility.get_visibility_polygon(src_point.state.location, src_point.state.direction)
+        else:
+            walls_by_distance = self.visibility.walls_by_distance(src=src_point)
+        parsed_walls = []
+        for wall_number, vertices, distance in walls_by_distance:
+            parsed_walls.append((distance, self.wall_direction(src=src_point, wall_number=wall_number)))
+        observation["walls"] = parsed_walls
+        observation["agent_states"] = {}
+        for dst_name, dst_agent in self.agents.items():
+            if agent_name == dst_name:
+                is_visible = True
+            else:
+                dst_point = sp.Point(dst_agent.state.location)
+                if polygonal:
+                    dst_polygon = dst_agent.get_polygon()
+                    is_visible = dst_polygon.intersects(visibility_polygon)
+                else:
+                    is_visible = self.visibility.line_of_side(src=src_point,
+                                                              dst=dst_point,
+                                                              walls_by_distance=walls_by_distance)
+            if is_visible:
+                observation["agent_states"][dst_name] = self.agents[dst_name].state.location, self.agents[dst_name].state.direction
+            else:
+                observation["agent_states"][dst_name] = None
+        return observation
+
     def step(self):
         if self.real_time:
             while self.last_step + self.time_step > time.time():
@@ -104,6 +138,5 @@ class Model(object):
                     if self.is_valid_state(agent_polygon=agent_polygon,
                                            collisions=agent.collision):
                         agent.state = new_state
-        observations = self.get_observations()
         for name, agent in self.agents.items():
-            agent.step(delta_t=self.time_step, observation=observations[name])
+            agent.step(delta_t=self.time_step)

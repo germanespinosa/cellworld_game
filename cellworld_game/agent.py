@@ -54,18 +54,20 @@ class Agent(object):
         self.on_reset = None
         self.on_step = None
         self.on_start = None
+        self.name = ""
+        self.model = None
 
     def reset(self):
         if self.on_reset:
             self.on_reset()
 
-    def start(self, observation: dict):
+    def start(self):
         if self.on_start:
-            self.on_start(observation)
+            self.on_start()
 
-    def step(self, delta_t: float, observation: dict):
+    def step(self, delta_t: float):
         if self.on_step:
-            self.on_step(delta_t, observation)
+            self.on_step(delta_t)
 
     @staticmethod
     def create_sprite() -> pygame.Surface:
@@ -96,3 +98,9 @@ class Agent(object):
     def get_sprite(self) -> pygame.Surface:
         rotated_sprite = pygame.transform.rotate(self.sprite, self.state.direction)
         return rotated_sprite
+
+    def get_observation(self):
+        if self.model:
+            return self.model.get_observation(agent_name=self.name)
+        else:
+            return None
