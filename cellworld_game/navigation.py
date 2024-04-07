@@ -26,31 +26,22 @@ class Navigation:
                 min_dist2 = dist2
         return closest
 
-    def clear_path(self, path_indexes):
-        src = path_indexes[0]
-        clear_path = []
-        last_step = src
-        src_point = last_step
-        for step in path_indexes:
-            is_visible = step in self.visibility[src_point]
-            if not is_visible:
-                clear_path.append(last_step)
-                src_point = last_step
-            last_step = step
-        clear_path.append(path_indexes[-1])
-        return [self.locations[s] for s in clear_path]
-
     def get_path(self,
                  src: typing.Tuple[float, float],
                  dst: typing.Tuple[float, float]) -> typing.List[typing.Tuple[float, float]]:
         src_index = self.closest_location(location=src)
         dst_index = self.closest_location(location=dst)
         current = src_index
-        path_indexes = [current]
+        last_step = src_index
+        path_indexes = [last_step]
         while current is not None and current != dst_index:
-            next = self.paths[current][dst_index]
-            if next == current:
+            next_step = self.paths[current][dst_index]
+            if next_step == current:
                 break
-            current = next
-            path_indexes.append(current)
-        return self.clear_path(path_indexes=path_indexes)
+            is_visible = next_step in self.visibility[last_step]
+            if not is_visible:
+                path_indexes.append(current)
+                last_step = current
+            current = next_step
+        path_indexes.append(dst_index)
+        return [self.locations[s] for s in path_indexes]

@@ -6,6 +6,7 @@ from .agent import Agent
 from .visibility import Visibility
 from .geometry import atan2
 
+
 class Model(object):
 
     def __init__(self,

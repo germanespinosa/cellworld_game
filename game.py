@@ -34,6 +34,7 @@ view = View(model=model)
 model.reset()
 post_observation = prey.get_observation()
 last_action_time = time.time() - 3
+t0 = time.time()
 while not prey.finished:
     pre_observation = post_observation
     view.draw()
@@ -44,5 +45,8 @@ while not prey.finished:
         last_action_time = time.time()
     model.step()
     post_observation = prey.get_observation()
+    t1 = time.time()
+    print(1/(t1-t0))
+    t0 = t1
     # learning Gradient Descent
 
