@@ -3,7 +3,6 @@ from .model import Model
 from .agent import Agent
 import math
 from .util import generate_distinct_colors
-import shapely as sp
 
 
 class View(object):
