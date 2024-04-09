@@ -7,7 +7,10 @@ import shapely as sp
 
 
 class View(object):
-    def __init__(self, model: Model, screen_width: int = 800, flip_y: bool = True):
+    def __init__(self,
+                 model: Model,
+                 screen_width: int = 800,
+                 flip_y: bool = True):
         pygame.init()
         self.model = model
         self.visibility = model.visibility
@@ -89,12 +92,6 @@ class View(object):
         for occlusion in self.model.occlusions:
             self.draw_polygon(occlusion, self.occlusion_color)
 
-        for (name, agent), color in zip(self.model.agents.items(), self.agent_colors):
-            if self.show_sprites:
-                self.draw_agent(agent=agent)
-            else:
-                self.draw_polygon(self.model.agents[name].get_polygon(), color=self.agent_colors[name])
-
         if "predator" in self.model.agents and self.model.agents["predator"].path:
             current_point = self.model.agents["predator"].state.location
             for step in self.model.agents["predator"].path:
@@ -109,6 +106,30 @@ class View(object):
                                    radius=5,
                                    width=2)
                 current_point = step
+            if "prey" in self.model.agents:
+                predator_location = self.from_canonical(self.model.agents["predator"].state.location)
+                puff_area_size = self.model.agents["prey"].puff_threshold * self.screen_width
+                puff_location = predator_location[0] - puff_area_size , predator_location[1] - puff_area_size
+                puff_area_surface = pygame.Surface((puff_area_size * 2, puff_area_size * 2), pygame.SRCALPHA)
+                puff_area_color = (255, 0, 0, 60) if self.model.agents["prey"].puff_cool_down > 0 else (0, 0, 255, 60)
+                pygame.draw.circle(puff_area_surface,
+                                   color=puff_area_color,
+                                   center=(puff_area_size, puff_area_size),
+                                   radius=puff_area_size)
+                self.screen.blit(puff_area_surface,
+                                 puff_location)
+                pygame.draw.circle(surface=self.screen,
+                                   color=(0, 0, 255),
+                                   center=predator_location,
+                                   radius=puff_area_size,
+                                   width=2)
+
+
+        for (name, agent), color in zip(self.model.agents.items(), self.agent_colors):
+            if self.show_sprites:
+                self.draw_agent(agent=agent)
+            else:
+                self.draw_polygon(self.model.agents[name].get_polygon(), color=self.agent_colors[name])
 
         if self.screen_target:
             pygame.draw.circle(surface=self.screen,

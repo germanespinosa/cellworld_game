@@ -21,7 +21,7 @@ prey = Mouse(start_state=AgentState(location=(.05, .5),
                                     direction=0),
              goal_location=(1, .5),
              goal_threshold=.1,
-             puff_threshold=.05,
+             puff_threshold=.1,
              puff_cool_down_time=.5,
              navigation=loader.navigation,
              actions=loader.full_action_list)
