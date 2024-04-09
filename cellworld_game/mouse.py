@@ -67,6 +67,7 @@ class Mouse(NavigationAgent):
 
         parsed_observation += [o[0] for o in observation["walls"][:3]]
         parsed_observation += [math.radians(o[1]) for o in observation["walls"][:3]]
+        parsed_observation += [self.puffed, self.puff_cool_down, self.finished]
         return parsed_observation
 
     def reset(self):
@@ -81,7 +82,10 @@ class Mouse(NavigationAgent):
         NavigationAgent.start(self)
 
     def step(self, delta_t: float):
-        self.puff_cool_down -= delta_t
+        if delta_t < self.puff_cool_down:
+            self.puff_cool_down -= delta_t
+        else:
+            self.puff_cool_down = 0
         self.navigate(delta_t=delta_t)
 
     @staticmethod
