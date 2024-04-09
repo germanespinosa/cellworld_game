@@ -41,6 +41,7 @@ class Robot(NavigationAgent):
             if "prey" in observation["agent_states"] and observation["agent_states"]["prey"]:
                 self.set_destination(observation["agent_states"]["prey"][0])
 
-            if not self.path:
-                self.set_destination(random.choice(self.open_locations))
+        if not self.path:
+            self.set_destination(random.choice(self.open_locations))
+
         self.navigate(delta_t=delta_t)
