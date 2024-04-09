@@ -20,6 +20,7 @@ class Robot(NavigationAgent):
         self.last_destination_time = 0
 
     def reset(self):
+        NavigationAgent.reset(self)
         self.state.location = random.choice(self.start_locations)
         self.state.direction = 180
 

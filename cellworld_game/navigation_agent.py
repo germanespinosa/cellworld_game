@@ -16,48 +16,43 @@ class NavigationAgent(Agent):
         self.threshold = threshold
         self.navigation = navigation
         self.destination = None
-        self.next_step = None
         self.path = []
         Agent.__init__(self)
         self.collision = False
 
+    def next_step(self):
+        if self.path:
+            return self.path[0]
+        return None
+
     def set_destination(self, destination):
         self.destination = destination
         self.path = self.navigation.get_path(src=self.state.location, dst=self.destination)
-        if self.path:
-            self.next_step = self.path[0]
-            self.path.pop(0)
-        else:
-            self.next_step = None
 
     def reset(self):
         self.destination = None
-        self.next_step = None
+        self.path = []
         Agent.reset(self)
 
     def start(self):
         Agent.start(self)
 
     def navigate(self, delta_t: float):
-        if self.next_step is not None:
-            distance_error = distance(src=self.state.location,
-                                      dst=self.next_step)
-            if distance_error < self.threshold:
-                self.next_step = None
 
-        if self.next_step is None:
-            if self.path:
-                self.next_step = self.path[0]
+        if self.next_step() is not None:
+            distance_error = distance(src=self.state.location,
+                                      dst=self.next_step())
+            if distance_error < self.threshold:
                 self.path.pop(0)
 
-        if self.next_step:
+        if self.next_step():
             distance_error = distance(src=self.state.location,
-                                      dst=self.next_step)
+                                      dst=self.next_step())
 
             normalized_distance_error = max(distance_error/.2, 1)
 
             destination_direction = direction(src=self.state.location,
-                                              dst=self.next_step)
+                                              dst=self.next_step())
             direction_error = direction_difference(direction1=self.state.direction,
                                                    direction2=destination_direction)
             normalized_direction_error = direction_error_normalization(direction_error=direction_error)

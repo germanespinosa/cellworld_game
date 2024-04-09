@@ -85,22 +85,6 @@ class View(object):
                                                                            direction=visibility_perspective.direction,
                                                                            view_field=360)
             self.draw_polygon(visibility_polygon, (180, 180, 180))
-            # font_size = 24
-            # font = pygame.font.Font(None, font_size)
-            # for i, v in enumerate(a):
-            #     text_surface = font.render(str(i), True, (0, 0, 255), (0,0,0))
-            #     pygame.draw.line(self.screen,
-            #                      (0, 0, 255),
-            #                      (self.screen_width/2, self.screen_height/2),
-            #                      self.from_canonical((v.x,v.y)), 3)
-            #     self.screen.blit(text_surface, self.from_canonical((v.x,v.y)))
-            # for i, v in enumerate(visibility_polygon.exterior.coords):
-            #     text_surface = font.render(str(i), True, (0,0,255), (0,0,0))
-            #     pygame.draw.line(self.screen,
-            #                      (0, 0, 255),
-            #                      (self.screen_width/2, self.screen_height/2),
-            #                      self.from_canonical(v), 3)
-            #     self.screen.blit(text_surface, self.from_canonical(v))
 
         for occlusion in self.model.occlusions:
             self.draw_polygon(occlusion, self.occlusion_color)
@@ -111,8 +95,20 @@ class View(object):
             else:
                 self.draw_polygon(self.model.agents[name].get_polygon(), color=self.agent_colors[name])
 
-        if self.model.agents["predator"].path:
-            self.draw_points([sp.Point(s) for s in self.model.agents["predator"].path], color=(255, 0, 0), size=3)
+        if "predator" in self.model.agents and self.model.agents["predator"].path:
+            current_point = self.model.agents["predator"].state.location
+            for step in self.model.agents["predator"].path:
+                pygame.draw.line(self.screen,
+                                 (255, 0, 0),
+                                 self.from_canonical(current_point),
+                                 self.from_canonical(step),
+                                 2)
+                pygame.draw.circle(surface=self.screen,
+                                   color=(0, 0, 255),
+                                   center=self.from_canonical(step),
+                                   radius=5,
+                                   width=2)
+                current_point = step
 
         if self.screen_target:
             pygame.draw.circle(surface=self.screen,
