@@ -14,7 +14,9 @@ class Robot(NavigationAgent):
                  open_locations: typing.List[typing.Tuple[float, float]],
                  navigation: Navigation):
         NavigationAgent.__init__(self,
-                                 navigation=navigation)
+                                 navigation=navigation,
+                                 max_forward_speed=0.075,
+                                 max_turning_speed=3.5)
         self.start_locations = start_locations
         self.open_locations = open_locations
         self.last_destination_time = 0

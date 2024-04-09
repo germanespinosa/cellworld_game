@@ -33,7 +33,7 @@ class Navigation:
         dst_index = self.closest_location(location=dst)
         current = src_index
         last_step = src_index
-        path_indexes = [last_step]
+        path_indexes = []
         while current is not None and current != dst_index:
             next_step = self.paths[current][dst_index]
             if next_step == current:

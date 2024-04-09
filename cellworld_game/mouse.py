@@ -21,8 +21,8 @@ class Mouse(NavigationAgent):
                  navigation: Navigation):
         NavigationAgent.__init__(self,
                                  navigation=navigation,
-                                 max_forward_speed=0.05,
-                                 max_turning_speed=2.0)
+                                 max_forward_speed=0.5,
+                                 max_turning_speed=20.0)
         self.start_state = start_state
         self.actions = actions
         self.goal_location = goal_location

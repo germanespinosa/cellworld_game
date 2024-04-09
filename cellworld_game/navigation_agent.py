@@ -8,8 +8,8 @@ class NavigationAgent(Agent):
 
     def __init__(self,
                  navigation: Navigation,
-                 max_forward_speed: float = 0.0075,
-                 max_turning_speed: float = 0.35,
+                 max_forward_speed: float,
+                 max_turning_speed: float,
                  threshold: float = 0.01):
         self.max_forward_speed = max_forward_speed
         self.max_turning_speed = max_turning_speed

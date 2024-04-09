@@ -7,8 +7,8 @@ loader = CellWorldLoader(world_name="21_05")
 
 model = Model(arena=loader.arena,
               occlusions=loader.occlusions,
-              time_step=.1,
-              real_time=False)
+              time_step=.025,
+              real_time=True)
 
 predator = Robot(start_locations=loader.robot_start_locations,
                  open_locations=loader.open_locations,
