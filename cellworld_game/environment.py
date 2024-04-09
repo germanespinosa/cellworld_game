@@ -22,7 +22,7 @@ class Environment(Env):
         self.reward_function = reward_function
         self.step_wait = step_wait
         self.loader = CellWorldLoader(world_name=world_name)
-        self.observation_space = spaces.Box(-np.inf, np.inf, (14,), dtype=np.float32)
+        self.observation_space = spaces.Box(-np.inf, np.inf, (17,), dtype=np.float32)
         self.action_space = spaces.Discrete(len(self.loader.tlppo_action_list)
                                             if use_lppos
                                             else len(self.loader.open_locations))

@@ -27,14 +27,14 @@ def DQN_train(environment: Environment):
                 environment,
                 verbose=1,
                 batch_size=256,
-                learning_rate=1e-3,
+                learning_rate=1e-4,
                 train_freq=(1, "step"),
-                buffer_size=10000,
+                buffer_size=400000,
                 learning_starts=1000,
                 replay_buffer_class=ReplayBuffer,
-                policy_kwargs={"net_arch": [256, 256]}
+                policy_kwargs={"net_arch": [512, 512]}
                 )
-    model.learn(total_timesteps=100000, log_interval=2)
+    model.learn(total_timesteps=400000, log_interval=2)
     model.save("DQN")
     env.close()
 
@@ -56,7 +56,12 @@ def result_visualization(environment: Environment):
 
 
 def reward(observation):
-    return -observation[6]
+    r = -observation[6]
+    if observation[-1]:
+        r += 1
+    if observation[-3]:
+        r -= 10
+    return r
 
 
 if __name__=="__main__":
@@ -65,7 +70,7 @@ if __name__=="__main__":
                       use_predator=True,
                       max_step=300,
                       reward_function=reward,
-                      step_wait=1)
-    random(env)
-    #DQN_train(env)
-    # result_visualization()
+                      step_wait=20)
+    #random(env)
+    DQN_train(env)
+    result_visualization(env)

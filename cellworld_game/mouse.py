@@ -53,11 +53,11 @@ class Mouse(NavigationAgent):
                 self.puff_cool_down = self.puff_cool_down_time
             else:
                 self.puffed = False
-                parsed_observation.append(observation["agent_states"]["predator"][0][0])
-                parsed_observation.append(observation["agent_states"]["predator"][0][1])
-                parsed_observation.append(math.radians(observation["agent_states"]["predator"][1]))
-                parsed_observation.append(goal_distance)
-                parsed_observation.append(predator_distance)
+            parsed_observation.append(observation["agent_states"]["predator"][0][0])
+            parsed_observation.append(observation["agent_states"]["predator"][0][1])
+            parsed_observation.append(math.radians(observation["agent_states"]["predator"][1]))
+            parsed_observation.append(goal_distance)
+            parsed_observation.append(predator_distance)
         else:
             parsed_observation += [0,
                                    0,
