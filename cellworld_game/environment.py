@@ -72,5 +72,5 @@ class Environment(Env):
 
     def render(self):
         if self.view is None:
-            View(model=self.model)
+            self.view = View(model=self.model)
         self.view.draw()
