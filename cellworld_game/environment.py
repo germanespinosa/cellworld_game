@@ -29,7 +29,7 @@ class Environment(Env):
 
         self.model = Model(arena=self.loader.arena,
                            occlusions=self.loader.occlusions,
-                           time_step=.1,
+                           time_step=.025,
                            real_time=False)
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
@@ -41,7 +41,7 @@ class Environment(Env):
                                                  direction=0),
                           goal_location=(1, .5),
                           goal_threshold=.1,
-                          puff_threshold=.05,
+                          puff_threshold=.1,
                           puff_cool_down_time=.5,
                           navigation=self.loader.navigation,
                           actions=self.loader.full_action_list)
