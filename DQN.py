@@ -13,7 +13,8 @@ def random(environment: Environment):
         if i % 10000 == 0:
             print(i)
         print(i)
-        obs, reward, done, tr, _ = environment.step(environment.action_space.sample())
+        # obs, reward, done, tr, _ = environment.step(environment.action_space.sample())
+        obs, reward, done, tr, _ = environment.step(280)
         environment.render()
         if i % 200 == 0:
             environment.reset()
@@ -64,7 +65,7 @@ if __name__=="__main__":
                       use_predator=True,
                       max_step=300,
                       reward_function=reward,
-                      step_wait=25)
-    #random()
-    DQN_train(env)
+                      step_wait=1)
+    random(env)
+    #DQN_train(env)
     # result_visualization()

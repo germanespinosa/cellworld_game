@@ -26,8 +26,9 @@ class NavigationAgent(Agent):
         return None
 
     def set_destination(self, destination):
-        self.destination = destination
-        self.path = self.navigation.get_path(src=self.state.location, dst=self.destination)
+        if destination != self.destination:
+            self.destination = destination
+            self.path = self.navigation.get_path(src=self.state.location, dst=self.destination)
 
     def reset(self):
         self.destination = None
