@@ -59,6 +59,7 @@ class Environment(Env):
         self.set_action(action=action)
         for i in range(self.step_wait):
             self.model.step()
+            # self.render()
         truncated = (self.step_count >= self.max_step)
         obs = self.prey.get_observation()
         reward = self.reward_function(obs)

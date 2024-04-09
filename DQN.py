@@ -14,15 +14,15 @@ def random(environment: Environment):
             print(i)
         print(i)
         # obs, reward, done, tr, _ = environment.step(environment.action_space.sample())
-        obs, reward, done, tr, _ = environment.step(280)
+        obs, reward, done, tr, _ = environment.step(len(environment.loader.full_action_list)-1)
         environment.render()
-        if i % 200 == 0:
+        if environment.prey.finished or i % 200 == 0:
             environment.reset()
 
 
-def DQN_train(environment: Environment):
 
-    environment.render()
+def DQN_train(environment: Environment):
+    # environment.render()
     model = DQN("MlpPolicy",
                 environment,
                 verbose=1,
@@ -34,7 +34,7 @@ def DQN_train(environment: Environment):
                 replay_buffer_class=ReplayBuffer,
                 policy_kwargs={"net_arch": [512, 512]}
                 )
-    model.learn(total_timesteps=400000, log_interval=2)
+    model.learn(total_timesteps=40000, log_interval=2)
     model.save("DQN")
     env.close()
 
@@ -57,10 +57,10 @@ def result_visualization(environment: Environment):
 
 def reward(observation):
     r = -observation[6]
-    if observation[-1]:
-        r += 1
-    if observation[-3]:
-        r -= 10
+    # if observation[-1]:
+    #     r += 1
+    # if observation[-3]:
+    #     r -= 10
     return r
 
 
@@ -72,5 +72,5 @@ if __name__=="__main__":
                       reward_function=reward,
                       step_wait=20)
     #random(env)
-    DQN_train(env)
+    #DQN_train(env)
     result_visualization(env)
