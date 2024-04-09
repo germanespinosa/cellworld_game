@@ -48,8 +48,8 @@ class Mouse(NavigationAgent):
         if observation["agent_states"]["predator"]:
             predator_distance = distance(observation["agent_states"]["prey"][0],
                                          observation["agent_states"]["predator"][0])
-            if self.puff_threshold <= 0:
-                self.puffed = predator_distance <= self.puff_threshold
+            if self.puff_cool_down <= 0 and predator_distance <= self.puff_threshold:
+                self.puffed = True
                 self.puff_cool_down = self.puff_cool_down_time
             else:
                 self.puffed = False
