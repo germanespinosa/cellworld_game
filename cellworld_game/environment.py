@@ -64,7 +64,7 @@ class Environment(Env):
         reward = self.reward_function(obs)
         return obs, reward, self.prey.finished, truncated, {}
 
-    def reset(self):
+    def reset(self, seed=None):
         self.step_count = 0
         self.model.reset()
         obs = self.prey.get_observation()
