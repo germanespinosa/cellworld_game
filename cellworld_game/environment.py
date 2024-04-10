@@ -26,6 +26,10 @@ class Environment(Env):
         self.action_space = spaces.Discrete(len(self.loader.tlppo_action_list)
                                             if use_lppos
                                             else len(self.loader.open_locations))
+        if use_lppos:
+            self.action_list = self.loader.tlppo_action_list
+        else:
+            self.action_list = self.loader.full_action_list
 
         self.model = Model(arena=self.loader.arena,
                            occlusions=self.loader.occlusions,
@@ -44,7 +48,7 @@ class Environment(Env):
                           puff_threshold=.1,
                           puff_cool_down_time=.5,
                           navigation=self.loader.navigation,
-                          actions=self.loader.full_action_list)
+                          actions=self.action_list)
         self.model.add_agent("prey", self.prey)
         self.view = None
 
