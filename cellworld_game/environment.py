@@ -48,9 +48,11 @@ class Environment(Env):
                           puff_threshold=.1,
                           puff_cool_down_time=.5,
                           navigation=self.loader.navigation,
-                          actions=self.action_list)
+                          actions=self.action_list,
+                          predator=self.predator)
         self.model.add_agent("prey", self.prey)
         self.view = None
+        self.render_steps = False
 
     def get_observation(self):
         return self.mouse.get_observation("prey")
@@ -63,10 +65,12 @@ class Environment(Env):
         self.set_action(action=action)
         for i in range(self.step_wait):
             self.model.step()
-            # self.render()
+            if self.render_steps:
+                self.render()
         truncated = (self.step_count >= self.max_step)
         obs = self.prey.get_observation()
         reward = self.reward_function(obs)
+        self.prey.puffed = False
         return obs, reward, self.prey.finished, truncated, {}
 
     def reset(self, seed=None):
