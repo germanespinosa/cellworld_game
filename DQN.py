@@ -20,26 +20,26 @@ def random(environment: Environment):
             environment.reset()
 
 
-
 def DQN_train(environment: Environment):
     # environment.render()
     model = DQN("MlpPolicy",
                 environment,
                 verbose=1,
                 batch_size=256,
-                learning_rate=1e-4,
+                learning_rate=1e-3,
                 train_freq=(1, "step"),
                 buffer_size=400000,
                 learning_starts=1000,
                 replay_buffer_class=ReplayBuffer,
-                policy_kwargs={"net_arch": [512, 512]}
+                policy_kwargs={"net_arch": [256, 256]}
                 )
-    model.learn(total_timesteps=40000, log_interval=2)
+    model.learn(total_timesteps=1000000, log_interval=2)
     model.save("DQN")
     env.close()
 
 
 def result_visualization(environment: Environment):
+    environment.model.real_time = True
     loaded_model = DQN.load("DQN.zip")
     scores = []
     for i in range(100):
@@ -57,20 +57,21 @@ def result_visualization(environment: Environment):
 
 def reward(observation):
     r = -observation[6]
-    # if observation[-1]:
-    #     r += 1
-    # if observation[-3]:
-    #     r -= 10
+    if observation[-1]:
+        r += 1
+    if observation[-3]:
+        r -= 10
     return r
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     env = Environment(world_name="21_05",
                       use_lppos=False,
                       use_predator=True,
                       max_step=300,
                       reward_function=reward,
                       step_wait=20)
+    print(len(env.loader.full_action_list)-1)
     #random(env)
     #DQN_train(env)
     result_visualization(env)
