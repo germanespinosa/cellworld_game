@@ -38,10 +38,16 @@ class Visibility:
                 return ray.intersection(side)
         return None
 
-    def line_of_side(self,
-                     src: sp.Point,
-                     dst: sp.Point,
-                     walls_by_distance=None) -> bool:
+    def line_of_sight(self,
+                      src: typing.Union[sp.Point,typing.Tuple[float, float]],
+                      dst: typing.Union[sp.Point,typing.Tuple[float, float]],
+                      walls_by_distance=None) -> bool:
+        if isinstance(src, tuple):
+            src = sp.Point(*src)
+
+        if isinstance(dst, tuple):
+            dst = sp.Point(*dst)
+
         if walls_by_distance is None:
             walls_by_distance = self.walls_by_distance(src=src)
 

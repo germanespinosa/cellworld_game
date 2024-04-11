@@ -64,9 +64,9 @@ class Model(object):
                         is_visible = True
                     else:
                         dst_point = sp.Point(dst_agent.state.location)
-                        is_visible = self.visibility.line_of_side(src=src_point,
-                                                                  dst=dst_point,
-                                                                  walls_by_distance=walls_by_distance)
+                        is_visible = self.visibility.line_of_sight(src=src_point,
+                                                                   dst=dst_point,
+                                                                   walls_by_distance=walls_by_distance)
                     agent_visibility[src_name][dst_name] = is_visible
                     agent_visibility[dst_name][src_name] = is_visible
             observations[src_name]["agent_states"] = {}
@@ -100,9 +100,9 @@ class Model(object):
                     dst_polygon = dst_agent.get_polygon()
                     is_visible = dst_polygon.intersects(visibility_polygon)
                 else:
-                    is_visible = self.visibility.line_of_side(src=src_point,
-                                                              dst=dst_point,
-                                                              walls_by_distance=walls_by_distance)
+                    is_visible = self.visibility.line_of_sight(src=src_point,
+                                                               dst=dst_point,
+                                                               walls_by_distance=walls_by_distance)
             if is_visible:
                 observation["agent_states"][dst_name] = self.agents[dst_name].state.location, self.agents[dst_name].state.direction
             else:
