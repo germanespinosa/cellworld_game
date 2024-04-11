@@ -62,8 +62,8 @@ class Mouse(NavigationAgent):
                                    goal_distance,
                                    0]
 
-        parsed_observation += [o[0] for o in observation["walls"][:3]]
-        parsed_observation += [math.radians(o[1]) for o in observation["walls"][:3]]
+        # parsed_observation += [o[0] for o in observation["walls"][:3]]
+        # parsed_observation += [math.radians(o[1]) for o in observation["walls"][:3]]
         parsed_observation += [self.puffed, self.puff_cool_down, self.finished]
         return parsed_observation
 
