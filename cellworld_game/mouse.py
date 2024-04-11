@@ -60,7 +60,7 @@ class Mouse(NavigationAgent):
                                    0,
                                    0,
                                    goal_distance,
-                                   0]
+                                   1]
 
         # parsed_observation += [o[0] for o in observation["walls"][:3]]
         # parsed_observation += [math.radians(o[1]) for o in observation["walls"][:3]]
@@ -83,8 +83,9 @@ class Mouse(NavigationAgent):
             predator_distance = distance(self.state.location,
                                          self.predator.state.location)
             if predator_distance <= self.puff_threshold:
-                self.puffed = True
-                self.puff_cool_down = self.puff_cool_down_time
+                if self.model.visibility.line_of_sight(self.state.location, self.predator.state.location):
+                    self.puffed = True
+                    self.puff_cool_down = self.puff_cool_down_time
 
         if delta_t < self.puff_cool_down:
             self.puff_cool_down -= delta_t
