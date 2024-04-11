@@ -22,7 +22,7 @@ class Environment(Env):
         self.reward_function = reward_function
         self.step_wait = step_wait
         self.loader = CellWorldLoader(world_name=world_name)
-        self.observation_space = spaces.Box(-np.inf, np.inf, (17,), dtype=np.float32)
+        self.observation_space = spaces.Box(-np.inf, np.inf, (11,), dtype=np.float32)
         self.action_space = spaces.Discrete(len(self.loader.tlppo_action_list)
                                             if use_lppos
                                             else len(self.loader.open_locations))
@@ -53,6 +53,8 @@ class Environment(Env):
         self.model.add_agent("prey", self.prey)
         self.view = None
         self.render_steps = False
+        self.episode_reward_history = []
+        self.current_episode_reward = 0
 
     def get_observation(self):
         return self.mouse.get_observation("prey")
@@ -71,6 +73,10 @@ class Environment(Env):
         obs = self.prey.get_observation()
         reward = self.reward_function(obs)
         self.prey.puffed = False
+        self.current_episode_reward += reward
+        if self.prey.finished or truncated:
+            self.episode_reward_history.append(self.current_episode_reward)
+            self.current_episode_reward = 0
         return obs, reward, self.prey.finished, truncated, {}
 
     def reset(self, seed=None):
