@@ -1,5 +1,4 @@
 from .model import Model
-from .navigation import Navigation
 from .robot import Robot
 from .mouse import Mouse
 from .agent import AgentState
