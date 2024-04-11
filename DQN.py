@@ -59,9 +59,9 @@ def result_visualization(environment: Environment,
 def reward(observation):
     r = 0
     if observation[-1]:
-        r += 0
+        r += 1
     if observation[-3]:
-        r -= 1000
+        r -= 100
     return r
 
 
