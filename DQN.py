@@ -1,7 +1,10 @@
+import os
+import json
 import sys
-from cellworld_game import Environment
-from stable_baselines3 import DQN
+import typing
 
+from cellworld_game import Environment, Reward
+from stable_baselines3 import DQN
 from stable_baselines3.common.buffers import ReplayBuffer
 
 
@@ -20,22 +23,27 @@ def random(environment: Environment):
 
 def DQN_train(environment: Environment,
               name: str,
-              num_steps: int):
-    # environment.render()
+              training_steps: int,
+              network_architecture: typing.List[int],
+              learning_rate: float,
+              log_interval: int,
+              batch_size: int,
+              learning_starts: int,
+              **kwargs: typing.Any):
     model = DQN("MlpPolicy",
                 environment,
                 verbose=1,
-                batch_size=256,
-                learning_rate=1e-4,
+                batch_size=batch_size,
+                learning_rate=learning_rate,
                 train_freq=(1, "step"),
-                buffer_size=500000,
-                learning_starts=3000,
+                buffer_size=training_steps,
+                learning_starts=learning_starts,
                 replay_buffer_class=ReplayBuffer,
                 tensorboard_log="./tensorboard_logs/",
-                policy_kwargs={"net_arch": [512, 512]}
+                policy_kwargs={"net_arch": network_architecture}
                 )
-    model.learn(total_timesteps=num_steps, log_interval=10, tb_log_name=name)
-    model.save(name)
+    model.learn(total_timesteps=training_steps, log_interval=log_interval, tb_log_name=name)
+    model.save("models/%s" % name)
     env.close()
 
 
@@ -43,7 +51,7 @@ def result_visualization(environment: Environment,
                          name: str):
     environment.model.real_time = True
     environment.render_steps = True
-    loaded_model = DQN.load("%s.zip" % name)
+    loaded_model = DQN.load("models/%s.zip" % name)
     scores = []
     for i in range(100):
         obs, _ = environment.reset()
@@ -56,31 +64,47 @@ def result_visualization(environment: Environment,
     environment.close()
 
 
-def reward(observation):
-    r = 0
-    if observation[-1]:
-        r += 1
-    if observation[-3]:
-        r -= 100
-    return r
-
-
 if __name__ == "__main__":
-    env = Environment(world_name="21_05",
-                      use_lppos=True,
-                      use_predator=True,
-                      max_step=300,
-                      reward_function=reward,
-                      step_wait=10)
+    if len(sys.argv) > 1:
+        env = Environment(world_name="21_05",
+                          use_lppos=False,
+                          use_predator=True,
+                          max_step=300,
+                          step_wait=10)
 
-    if sys.argv[1] == "-r":
-        random(env)
-    else:
-        model_name = input("Model Name: ")
-        if sys.argv[1] == "-t":
-            DQN_train(environment=env,
-                      name=model_name,
-                      num_steps=500000)
+        if sys.argv[1] == "-r":
+            random(env)
+            exit(0)
         else:
-            result_visualization(environment=env,
-                                 name=model_name)
+            if len(sys.argv) > 2:
+                model_name = sys.argv[2]
+            else:
+                model_name = input("Model Name: ")
+
+            model_file = "models/%s_config.json" % model_name
+
+            if os.path.exists(model_file):
+                model_config = json.loads(open(model_file).read())
+
+                if sys.argv[1] == "-t":
+                    env.reward_function = Reward(model_config["reward_structure"])
+                    DQN_train(environment=env,
+                              name=model_name,
+                              **model_config)
+                elif sys.argv[1] == "-v":
+                    result_visualization(environment=env,
+                                         name=model_name)
+                exit(0)
+            else:
+                print("Model File not found")
+
+    else:
+        print("Missing parameters")
+
+    print("Usage: python DQN.py <option> <model_name>")
+    print("parameters:")
+    print("  -t <model_name> : Executes training using the given model configuration file")
+    print("  -v <model_name> : Shows visualization of the trained model")
+    print("  -r : shows the environment with random policy")
+    print()
+    exit(1)

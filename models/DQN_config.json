@@ -1,0 +1,7 @@
+{"training_steps": 50000,
+ "network_architecture": [512, 512],
+ "learning_rate": 1e-3,
+ "log_interval": 10,
+ "batch_size": 256,
+ "learning_starts": 100,
+ "reward_structure": {"goal_distance": -1, "predator_distance": 1, "puffed":  -100, "finished": 10}}

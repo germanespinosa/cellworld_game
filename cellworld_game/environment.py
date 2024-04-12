@@ -1,12 +1,14 @@
 from .model import Model
 from .robot import Robot
-from .mouse import Mouse
+from .mouse import Mouse, MouseObservation
 from .agent import AgentState
 from .view import View
 from gymnasium import Env
 from gymnasium import spaces
 from .cellworld_loader import CellWorldLoader
 import numpy as np
+from .util import distance
+import math
 
 
 class Environment(Env):
@@ -21,7 +23,8 @@ class Environment(Env):
         self.reward_function = reward_function
         self.step_wait = step_wait
         self.loader = CellWorldLoader(world_name=world_name)
-        self.observation_space = spaces.Box(-np.inf, np.inf, (11,), dtype=np.float32)
+        self.observation = MouseObservation()
+        self.observation_space = spaces.Box(-np.inf, np.inf, (len(self.observation),), dtype=np.float32)
         self.action_space = spaces.Discrete(len(self.loader.tlppo_action_list)
                                             if use_lppos
                                             else len(self.loader.open_locations))
@@ -54,9 +57,32 @@ class Environment(Env):
         self.render_steps = False
         self.episode_reward_history = []
         self.current_episode_reward = 0
+        self.step_count = 0
 
     def get_observation(self):
-        return self.mouse.get_observation("prey")
+        self.observation[MouseObservation.Field.prey_x] = self.prey.state.location[0]
+        self.observation[MouseObservation.Field.prey_y] = self.prey.state.location[1]
+        self.observation[MouseObservation.Field.prey_direction] = math.radians(self.prey.state.direction)
+
+        if self.model.visibility.line_of_sight(self.prey.state.location, self.predator.state.location):
+            self.observation[MouseObservation.Field.predator_x] = self.predator.state.location[0]
+            self.observation[MouseObservation.Field.predator_y] = self.predator.state.location[1]
+            self.observation[MouseObservation.Field.predator_direction] = math.radians(
+                self.predator.state.direction)
+            predator_distance = distance(self.prey.state.location, self.predator.state.location)
+        else:
+            self.observation[MouseObservation.Field.predator_x] = 0
+            self.observation[MouseObservation.Field.predator_y] = 0
+            self.observation[MouseObservation.Field.predator_direction] = 0
+            predator_distance = 1
+
+        goal_distance = distance(self.prey.goal_location, self.prey.state.location)
+        self.observation[MouseObservation.Field.goal_distance] = goal_distance
+        self.observation[MouseObservation.Field.predator_distance] = predator_distance
+        self.observation[MouseObservation.Field.puffed] = self.prey.puffed
+        self.observation[MouseObservation.Field.puff_cooled_down] = self.prey.puff_cool_down
+        self.observation[MouseObservation.Field.finished] = self.prey.finished
+        return self.observation
 
     def set_action(self, action: int):
         self.prey.set_action(action)
@@ -69,7 +95,7 @@ class Environment(Env):
             if self.render_steps:
                 self.render()
         truncated = (self.step_count >= self.max_step)
-        obs = self.prey.get_observation()
+        obs = self.get_observation()
         reward = self.reward_function(obs)
         self.prey.puffed = False
         self.current_episode_reward += reward
@@ -81,7 +107,7 @@ class Environment(Env):
     def reset(self, seed=None):
         self.step_count = 0
         self.model.reset()
-        obs = self.prey.get_observation()
+        obs = self.get_observation()
         return obs, {}
 
     def render(self):

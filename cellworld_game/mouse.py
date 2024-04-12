@@ -7,7 +7,31 @@ from .navigation import Navigation
 from .navigation_agent import NavigationAgent
 from .resources import Resources
 import shapely as sp
+from enum import Enum
 from .util import distance
+
+
+class MouseObservation(typing.List[float]):
+    class Field(Enum):
+        prey_x = 0
+        prey_y = 1
+        prey_direction = 2
+        predator_x = 3
+        predator_y = 4
+        predator_direction = 5
+        goal_distance = 6
+        predator_distance = 7
+        puffed = 8
+        puff_cooled_down = 9
+        finished = 10
+
+    def __init__(self):
+        super().__init__()
+        for i in MouseObservation.Field:
+            self.append(0.0)
+
+    def __setitem__(self, field: Field, value):
+        list.__setitem__(self, field.value, value)
 
 
 class Mouse(NavigationAgent):
@@ -32,45 +56,12 @@ class Mouse(NavigationAgent):
         self.puff_cool_down = 0
         self.puff_cool_down_time = puff_cool_down_time
         self.predator = predator
-        self.observation = None
         self.finished = False
         self.puffed = False
-
-    def get_observation(self):
-        observation = Agent.get_observation(self=self)
-        return self.parse_observation(observation=observation)
-
-    def parse_observation(self, observation: dict):
-        goal_distance = distance(self.goal_location, self.state.location)
-        self.finished = goal_distance <= self.goal_threshold
-        parsed_observation = [self.state.location[0],
-                              self.state.location[1],
-                              math.radians(self.state.direction)]
-
-        if observation["agent_states"]["predator"]:
-            predator_distance = distance(self.state.location,
-                                         self.predator.state.location)
-            parsed_observation.append(self.predator.state.location[0])
-            parsed_observation.append(self.predator.state.location[1])
-            parsed_observation.append(math.radians(self.predator.state.direction))
-            parsed_observation.append(goal_distance)
-            parsed_observation.append(predator_distance)
-        else:
-            parsed_observation += [0,
-                                   0,
-                                   0,
-                                   goal_distance,
-                                   1]
-
-        # parsed_observation += [o[0] for o in observation["walls"][:3]]
-        # parsed_observation += [math.radians(o[1]) for o in observation["walls"][:3]]
-        parsed_observation += [self.puffed, self.puff_cool_down, self.finished]
-        return parsed_observation
 
     def reset(self):
         self.finished = False
         self.puff_cool_down = 0
-        self.observation = None
         self.state.location = self.start_state.location
         self.state.direction = self.start_state.direction
         NavigationAgent.reset(self)
@@ -91,6 +82,9 @@ class Mouse(NavigationAgent):
             self.puff_cool_down -= delta_t
         else:
             self.puff_cool_down = 0
+
+        goal_distance = distance(self.goal_location, self.state.location)
+        self.finished = goal_distance <= self.goal_threshold
         self.navigate(delta_t=delta_t)
 
     @staticmethod
