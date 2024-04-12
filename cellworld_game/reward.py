@@ -8,5 +8,9 @@ class Reward(object):
     def __call__(self, observation: typing.List[float]) -> float:
         reward = 0.0
         for field, multiplier in self.reward_structure.items():
-            reward += multiplier * observation[MouseObservation.Field[field].value]
+            offset = 0
+            if isinstance(multiplier, list):
+                offset = multiplier[1]
+                multiplier = multiplier[0]
+            reward += offset + multiplier * observation[MouseObservation.Field[field].value]
         return reward
