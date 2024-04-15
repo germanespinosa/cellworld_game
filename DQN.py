@@ -66,13 +66,12 @@ def result_visualization(environment: Environment,
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        env = Environment(world_name="21_05",
-                          use_lppos=False,
-                          use_predator=True,
-                          max_step=300,
-                          step_wait=10)
-
         if sys.argv[1] == "-r":
+            env = Environment(world_name="21_05",
+                              use_lppos=True,
+                              use_predator=True,
+                              max_step=300,
+                              step_wait=10)
             random(env)
             exit(0)
         else:
@@ -87,13 +86,32 @@ if __name__ == "__main__":
                 model_config = json.loads(open(model_file).read())
 
                 if sys.argv[1] == "-t":
-                    env.reward_function = Reward(model_config["reward_structure"])
+                    env = Environment(world_name="21_05",
+                                      use_lppos=False,
+                                      use_predator=True,
+                                      max_step=300,
+                                      step_wait=10,
+                                      reward_function=Reward(model_config["reward_structure"]))
                     DQN_train(environment=env,
-                              name=model_name,
+                              name="%s_control" % model_name,
+                              **model_config)
+                    env = Environment(world_name="21_05",
+                                      use_lppos=True,
+                                      use_predator=True,
+                                      max_step=300,
+                                      step_wait=10,
+                                      reward_function=Reward(model_config["reward_structure"]))
+                    DQN_train(environment=env,
+                              name="%s_tlppo" % model_name,
                               **model_config)
                 elif sys.argv[1] == "-v":
+                    env = Environment(world_name="21_05",
+                                      use_lppos=False,
+                                      use_predator=True,
+                                      max_step=300,
+                                      step_wait=10)
                     result_visualization(environment=env,
-                                         name=model_name)
+                                         name="%s_tlppo" % model_name)
                 exit(0)
             else:
                 print("Model File not found")
