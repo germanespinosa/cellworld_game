@@ -6,6 +6,33 @@ import typing
 from cellworld_game import Environment, Reward
 from stable_baselines3 import DQN
 from stable_baselines3.common.buffers import ReplayBuffer
+from stable_baselines3.common.callbacks import BaseCallback
+import numpy as np
+
+
+class CustomMetricCallback(BaseCallback):
+    def __init__(self, verbose=0):
+        super(CustomMetricCallback, self).__init__(verbose)
+        self.episode_rewards = []
+        self.captures = 0
+        self.survival = 0
+        self.m2 = 0
+        self.m3 = 0
+
+    def _on_step(self):
+        self.captures += self.locals["infos"][0]["capture"]
+        self.survival += self.locals["infos"][0]["survived"]
+        return True
+
+    def _on_rollout_end(self):
+        self.logger.record('cellworld/captures', self.captures)
+        self.logger.record('cellworld/survival', self.survival)
+
+    def _on_rollout_start(self):
+        pass
+
+    def _on_episode_end(self):
+        pass
 
 
 def random(environment: Environment):
@@ -42,7 +69,11 @@ def DQN_train(environment: Environment,
                 tensorboard_log="./tensorboard_logs/",
                 policy_kwargs={"net_arch": network_architecture}
                 )
-    model.learn(total_timesteps=training_steps, log_interval=log_interval, tb_log_name=name)
+    custom_callback = CustomMetricCallback()
+    model.learn(total_timesteps=training_steps,
+                log_interval=log_interval,
+                tb_log_name=name,
+                callback=custom_callback)
     model.save("models/%s" % name)
     env.close()
 
