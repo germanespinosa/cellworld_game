@@ -18,7 +18,9 @@ class Environment(Env):
                  use_predator: bool,
                  max_step: int = 200,
                  reward_function=lambda x: 0,
-                 step_wait: int = 5):
+                 step_wait: int = 5,
+                 render: bool = False,
+                 real_time: bool = False):
         self.max_step = max_step
         self.reward_function = reward_function
         self.step_wait = step_wait
@@ -36,7 +38,7 @@ class Environment(Env):
         self.model = Model(arena=self.loader.arena,
                            occlusions=self.loader.occlusions,
                            time_step=.025,
-                           real_time=False)
+                           real_time=real_time)
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
                                   open_locations=self.loader.open_locations,
@@ -54,7 +56,7 @@ class Environment(Env):
                           predator=self.predator)
         self.model.add_agent("prey", self.prey)
         self.view = None
-        self.render_steps = False
+        self.render_steps = render
         self.step_count = 0
         self.captures = 0
         self.prey_trajectory_length = 0
