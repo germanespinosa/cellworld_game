@@ -1,6 +1,8 @@
 import random
 import typing
 import pygame
+
+from . import AgentState
 from .navigation import Navigation
 from .navigation_agent import NavigationAgent
 from .resources import Resources
@@ -23,8 +25,7 @@ class Robot(NavigationAgent):
 
     def reset(self):
         NavigationAgent.reset(self)
-        self.state.location = random.choice(self.start_locations)
-        self.state.direction = 180
+        self.set_state(AgentState(location=random.choice(self.start_locations), direction=180))
 
     @staticmethod
     def create_sprite() -> pygame.Surface:

@@ -1,5 +1,5 @@
 def __module_version__():
-	return 0, 0, 4 
+	return 0, 0, 5 
 
 def __module_name__():
 	return 'cellworld_game' 

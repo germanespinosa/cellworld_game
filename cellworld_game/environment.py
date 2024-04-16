@@ -101,14 +101,19 @@ class Environment(Env):
         obs = self.get_observation()
         reward = self.reward_function(obs)
         if self.prey.puffed:
-            capture = 1
             self.captures += 1
             self.prey.puffed = False
+        if self.prey.finished or truncated:
+            info = {"captures": self.captures,
+                    "is_success": 1 if self.prey.finished and self.captures == 0 else 0,
+                    "survived": 1 if self.prey.finished and self.captures == 0 else 0,
+                    "agents": {}}
+            for agent_name, agent in self.model.agents.items():
+                info["agents"][agent_name] = {}
+                info["agents"][agent_name] = agent.get_stats()
         else:
-            capture = 0
-        return obs, reward, self.prey.finished, truncated, {"capture": capture,
-                                                            "is_success": 1 if self.prey.finished and self.captures == 0 else 0,
-                                                            "survived": 1 if self.prey.finished and self.captures == 0 else 0}
+            info = {}
+        return obs, reward, self.prey.finished, truncated, info
 
     def reset(self, seed=None):
         self.captures = 0

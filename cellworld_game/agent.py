@@ -2,7 +2,7 @@ import typing
 import pygame
 import shapely as sp
 from .resources import Resources
-from .util import create_hexagon, move_point
+from .util import create_hexagon, move_point, distance
 from shapely.affinity import rotate, translate
 
 
@@ -44,7 +44,7 @@ class Agent(object):
                  view_field: float = 180,
                  collision: bool = True):
         self.view_field = view_field
-        self.state: AgentState = AgentState()
+        self._state: AgentState = AgentState()
         self.dynamics: AgentDynamics = AgentDynamics(forward_speed=0,
                                                      turn_speed=0)
         self.polygon = self.create_polygon()
@@ -56,16 +56,26 @@ class Agent(object):
         self.on_start = None
         self.name = ""
         self.model = None
+        self.trajectory: typing.List[AgentState] = []
 
-    def reset(self):
+    def set_state(self, state: AgentState) -> None:
+        self.trajectory.append(state)
+        self._state = state
+
+    @property
+    def state(self) -> AgentState:
+        return self._state
+
+    def reset(self) -> None:
+        self.trajectory.clear()
         if self.on_reset:
             self.on_reset()
 
-    def start(self):
+    def start(self) -> None:
         if self.on_start:
             self.on_start()
 
-    def step(self, delta_t: float):
+    def step(self, delta_t: float) -> None:
         if self.on_step:
             self.on_step(delta_t)
 
@@ -86,8 +96,8 @@ class Agent(object):
             x, y = state.location
             direction = state.direction
         else:
-            x, y = self.state.location
-            direction = self.state.direction
+            x, y = self._state.location
+            direction = self._state.direction
         rotated_polygon = rotate(self.polygon,
                                  direction,
                                  origin=(0, 0),
@@ -96,11 +106,21 @@ class Agent(object):
         return translated_polygon
 
     def get_sprite(self) -> pygame.Surface:
-        rotated_sprite = pygame.transform.rotate(self.sprite, self.state.direction)
+        rotated_sprite = pygame.transform.rotate(self.sprite, self._state.direction)
         return rotated_sprite
 
-    def get_observation(self):
+    def get_observation(self) -> dict:
         if self.model:
             return self.model.get_observation(agent_name=self.name)
         else:
             return None
+
+    def get_stats(self) -> dict:
+        stats = {}
+        dist = 0
+        prev_state = self.trajectory[0]
+        for state in self.trajectory[1:]:
+            dist += distance(prev_state.location, state.location)
+            prev_state = state
+        stats["distance"] = dist
+        return stats

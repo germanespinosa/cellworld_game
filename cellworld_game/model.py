@@ -123,20 +123,20 @@ class Model(object):
             agent_polygon = agent.get_polygon(state=new_state)
             if self.is_valid_state(agent_polygon=agent_polygon,
                                    collisions=agent.collision):
-                agent.state = new_state
+                agent.set_state(state=new_state)
             else: #try only rotation
                 new_state = agent.state.update(rotation=rotation,
                                                distance=0)
                 agent_polygon = agent.get_polygon(state=new_state)
                 if self.is_valid_state(agent_polygon=agent_polygon,
                                        collisions=agent.collision):
-                    agent.state = new_state
+                    agent.set_state(state=new_state)
                 else: #try only translation
                     new_state = agent.state.update(rotation=0,
                                                    distance=distance)
                     agent_polygon = agent.get_polygon(state=new_state)
                     if self.is_valid_state(agent_polygon=agent_polygon,
                                            collisions=agent.collision):
-                        agent.state = new_state
+                        agent.set_state(state=new_state)
         for name, agent in self.agents.items():
             agent.step(delta_t=self.time_step)

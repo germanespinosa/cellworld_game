@@ -62,9 +62,9 @@ class Mouse(NavigationAgent):
     def reset(self):
         self.finished = False
         self.puff_cool_down = 0
-        self.state.location = self.start_state.location
-        self.state.direction = self.start_state.direction
         NavigationAgent.reset(self)
+        self.set_state(AgentState(location=self.start_state.location,
+                                  direction=self.start_state.direction))
 
     def start(self):
         NavigationAgent.start(self)

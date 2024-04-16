@@ -7,26 +7,63 @@ from cellworld_game import Environment, Reward
 from stable_baselines3 import DQN
 from stable_baselines3.common.buffers import ReplayBuffer
 from stable_baselines3.common.callbacks import BaseCallback
-import numpy as np
+from stable_baselines3.common.utils import safe_mean
 
 
 class CustomMetricCallback(BaseCallback):
     def __init__(self, verbose=0):
         super(CustomMetricCallback, self).__init__(verbose)
+        self.captures_in_episode = 0
         self.episode_rewards = []
-        self.captures = 0
-        self.survival = 0
-        self.m2 = 0
-        self.m3 = 0
+        self.captures = []
+        self.captured = []
+        self.survival = []
+        self.finished = []
+        self.truncated = []
+        self.agents = {}
 
     def _on_step(self):
-        self.captures += self.locals["infos"][0]["capture"]
-        self.survival += self.locals["infos"][0]["survived"]
-        return True
+        if 'episode' in self.locals["infos"][0]:
+            self.captures.append(self.locals["infos"][0]["captures"])
+            if len(self.captures) > self.model._stats_window_size:
+                self.captures.pop(0)
 
-    def _on_rollout_end(self):
-        self.logger.record('cellworld/captures', self.captures)
-        self.logger.record('cellworld/survival', self.survival)
+            self.survival.append(self.locals["infos"][0]["survived"])
+            if len(self.survival) > self.model._stats_window_size:
+                self.survival.pop(0)
+
+            self.captured.append(1 if self.locals["infos"][0]["captures"] > 0 else 0)
+            if len(self.captured) > self.model._stats_window_size:
+                self.captured.pop(0)
+
+            self.finished.append(0 if self.locals["infos"][0]["TimeLimit.truncated"] else 1)
+            if len(self.finished) > self.model._stats_window_size:
+                self.finished.pop(0)
+
+            self.truncated.append(1 if self.locals["infos"][0]["TimeLimit.truncated"] else 0)
+            if len(self.truncated) > self.model._stats_window_size:
+                self.truncated.pop(0)
+
+            self.logger.record('cellworld/avg_captures', safe_mean(self.captures))
+            self.logger.record('cellworld/survival_rate', safe_mean(self.survival))
+            self.logger.record('cellworld/ep_finished', sum(self.finished))
+            self.logger.record('cellworld/ep_truncated', sum(self.truncated))
+            self.logger.record('cellworld/ep_captured', sum(self.captured))
+
+
+            for agent_name, agent_stats in self.locals["infos"][0]["agents"].items():
+                if agent_name not in self.agents:
+                    self.agents[agent_name] = {}
+                for stat, value in agent_stats.items():
+                    if stat not in self.agents[agent_name]:
+                        self.agents[agent_name][stat] = []
+                    self.agents[agent_name][stat].append(value)
+                    if len(self.agents[agent_name][stat]) > self.model._stats_window_size:
+                        self.agents[agent_name][stat].pop(0)
+                    stat_values = self.agents[agent_name][stat]
+                    self.logger.record('cellworld/{}_{}'.format(agent_name, stat), safe_mean(stat_values))
+
+        return True
 
     def _on_rollout_start(self):
         pass
