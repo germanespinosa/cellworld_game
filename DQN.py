@@ -3,6 +3,7 @@ import json
 import sys
 import typing
 
+from vec_env import create_vec_env
 from cellworld_game import Environment, Reward
 from stable_baselines3 import DQN
 from stable_baselines3.common.buffers import ReplayBuffer
@@ -85,7 +86,7 @@ def random(environment: Environment):
             environment.reset()
 
 
-def DQN_train(environment: Environment,
+def DQN_train(environment,
               name: str,
               training_steps: int,
               network_architecture: typing.List[int],
@@ -154,22 +155,27 @@ if __name__ == "__main__":
                 model_config = json.loads(open(model_file).read())
 
                 if sys.argv[1] == "-t":
-                    env = Environment(world_name="21_05",
-                                      use_lppos=False,
-                                      use_predator=True,
-                                      max_step=300,
-                                      step_wait=10,
-                                      reward_function=Reward(model_config["reward_structure"]))
-                    DQN_train(environment=env,
+                    vec_envs = create_vec_env(environment_count=10,
+                                              world_name="21_05",
+                                              use_lppos=False,
+                                              use_predator=True,
+                                              max_step=300,
+                                              step_wait=10,
+                                              reward_structure = model_config["reward_structure"])
+
+                    DQN_train(environment=vec_envs,
                               name="%s_control" % model_name,
                               **model_config)
-                    env = Environment(world_name="21_05",
-                                      use_lppos=True,
-                                      use_predator=True,
-                                      max_step=300,
-                                      step_wait=10,
-                                      reward_function=Reward(model_config["reward_structure"]))
-                    DQN_train(environment=env,
+
+                    vec_envs = create_vec_env(environment_count=10,
+                                              world_name="21_05",
+                                              use_lppos=True,
+                                              use_predator=True,
+                                              max_step=300,
+                                              step_wait=10,
+                                              reward_structure=model_config["reward_structure"])
+
+                    DQN_train(environment=vec_envs,
                               name="%s_tlppo" % model_name,
                               **model_config)
                 elif sys.argv[1] == "-v":
