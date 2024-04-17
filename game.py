@@ -24,22 +24,30 @@ prey = Mouse(start_state=AgentState(location=(.05, .5),
              puff_threshold=.1,
              puff_cool_down_time=.5,
              navigation=loader.navigation,
-             actions=loader.full_action_list)
+             actions=loader.full_action_list,
+             predator=predator)
 
 model.add_agent("prey", prey)
 
-view = View(model=model)
+finished = False
 
+
+def on_quit():
+    global finished
+    finished = True
+
+
+view = View(model=model)
+view.on_quit = on_quit
 
 model.reset()
 post_observation = prey.get_observation()
 last_action_time = time.time() - 3
 t0 = time.time()
-while not prey.finished:
+while not prey.finished and not finished:
     pre_observation = post_observation
     view.draw()
     if time.time() - last_action_time >= 3:
-        # decision
         action_number = random.randint(0, len(loader.full_action_list) - 1)
         prey.set_action(action_number)
         last_action_time = time.time()
@@ -48,5 +56,4 @@ while not prey.finished:
     t1 = time.time()
     print(1/(t1-t0))
     t0 = t1
-    # learning Gradient Descent
 

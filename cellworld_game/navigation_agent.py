@@ -1,4 +1,7 @@
 import typing
+
+import pygame
+
 from .util import distance, direction, direction_difference, direction_error_normalization
 from .agent import Agent
 from .navigation import Navigation
@@ -63,3 +66,20 @@ class NavigationAgent(Agent):
         else:
             self.dynamics.forward_speed = 0
             self.dynamics.turn_speed = 0
+
+    def render(self,
+               surface: pygame.Surface):
+        current_point = self.state.location
+        for step in self.path:
+            pygame.draw.line(surface,
+                             (255, 0, 0),
+                             self.coordinate_converter.from_canonical(current_point),
+                             self.coordinate_converter.from_canonical(step),
+                             2)
+            pygame.draw.circle(surface=surface,
+                               color=(0, 0, 255),
+                               center=self.coordinate_converter.from_canonical(step),
+                               radius=5,
+                               width=2)
+            current_point = step
+        Agent.render(self=self, surface=surface)

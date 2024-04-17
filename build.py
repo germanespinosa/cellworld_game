@@ -25,7 +25,7 @@ if build:
             repository = sys.argv[sys.argv.index('-repository')  + 1]
         cur_dir = os.getcwd()
         os.chdir(build)
-        upload_command = 'twine upload dist/*' + ((' --repository-url  ' + repository) if repository else '') + ((' -u ' + username) if username else '') + ((' -p ' + password) if password else '')
+        upload_command = 'python -m twine upload dist/*' + ((' --repository-url  ' + repository) if repository else '') + ((' -u ' + username) if username else '') + ((' -p ' + password) if password else '')
         os.system(upload_command)
         os.chdir(cur_dir)
     else:

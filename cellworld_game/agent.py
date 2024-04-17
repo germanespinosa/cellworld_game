@@ -4,6 +4,33 @@ import shapely as sp
 from .resources import Resources
 from .util import create_hexagon, move_point, distance
 from shapely.affinity import rotate, translate
+import math
+
+
+class CoordinateConverter(object):
+    def __init__(self,
+                 screen_size: typing.Tuple[int, int],
+                 flip_y: bool = False):
+        self.screen_size = screen_size
+        self.screen_width, self.screen_height = screen_size
+        self.flip_y = flip_y
+        self.screen_offset = (self.screen_width - self.screen_height) / 2
+        self.hexa_ratio = (math.sqrt(3) / 2)
+
+    def from_canonical(self, canonical: tuple):
+        canonical_x, canonical_y = canonical
+        screen_x = canonical_x * self.screen_width
+        if self.flip_y:
+            screen_y = (1-canonical_y) * self.screen_width - self.screen_offset
+        else:
+            screen_y = canonical_y * self.screen_width - self.screen_offset
+        return screen_x, screen_y
+
+    def to_canonical(self, screen_x: int, screen_y: int):
+        y = self.screen_height - screen_y + self.screen_offset
+        canonical_y = y / self.screen_height * self.hexa_ratio
+        canonical_x = screen_x / self.screen_width
+        return canonical_x, canonical_y
 
 
 class AgentState(object):
@@ -48,8 +75,7 @@ class Agent(object):
         self.dynamics: AgentDynamics = AgentDynamics(forward_speed=0,
                                                      turn_speed=0)
         self.polygon = self.create_polygon()
-        sprite = self.create_sprite()
-        self.sprite = pygame.transform.scale(sprite, (75, 75))
+        self.sprite = None
         self.collision = collision
         self.on_reset = None
         self.on_step = None
@@ -57,6 +83,10 @@ class Agent(object):
         self.name = ""
         self.model = None
         self.trajectory: typing.List[AgentState] = []
+        self.coordinate_converter: typing.Optional[CoordinateConverter] = None
+
+    def set_sprite_size(self, size: tuple):
+        self.sprite = pygame.transform.scale(self.create_sprite(), size)
 
     def set_state(self, state: AgentState) -> None:
         self.trajectory.append(state)
@@ -124,3 +154,14 @@ class Agent(object):
             prev_state = state
         stats["distance"] = dist
         return stats
+
+    def render(self,
+               surface: pygame.Surface):
+        agent_sprite: pygame.Surface = self.get_sprite()
+        width, height = agent_sprite.get_size()
+        screen_x, screen_y = self.coordinate_converter.from_canonical(self.state.location)
+        surface.blit(agent_sprite, (screen_x - width / 2, screen_y - height / 2))
+
+    def set_coordinate_converter(self,
+                                 coordinate_converter: CoordinateConverter):
+        self.coordinate_converter = coordinate_converter
