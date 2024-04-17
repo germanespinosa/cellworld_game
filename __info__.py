@@ -1,5 +1,5 @@
 def __module_version__():
-	return 0, 0, 14 
+	return 0, 0, 16 
 
 
 def __module_name__():
@@ -15,19 +15,19 @@ def __author_email__():
 
 
 def __package_description__():
-	return '' 
+	return 'Simulation environment for the cellworld research platform' 
 
 
 def __install_requires__():
-	return ['cellworld'] 
+	return ['cellworld', 'pygame', 'shapely'] 
 
 
 def __url__():
-	return '' 
+	return 'https://github.com/germanespinosa/cellworld_game' 
 
 
 def __license__():
-	return '' 
+	return 'MIT' 
 
 
 def __license_file__():
@@ -55,6 +55,6 @@ def __root_folder__():
 
 
 def __description__():
-	return '' 
+	return 'Simulation environment for the cellworld research platform' 
 
 
