@@ -90,10 +90,10 @@ class View(object):
                                center=self.screen_target,
                                radius=3,
                                width=2)
-        self.__process_events()
+        self.__process_events__()
         pygame.display.flip()
 
-    def __process_events(self):
+    def __process_events__(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 if self.on_quit:
