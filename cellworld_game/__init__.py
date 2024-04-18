@@ -7,5 +7,4 @@ from .mouse import Mouse
 from .ray_tracing import RayTracing
 from .navigation import Navigation
 from .util import create_hexagon, distance
-from .reward import Reward
 from .cellworld_loader import CellWorldLoader
