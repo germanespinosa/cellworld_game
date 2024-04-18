@@ -7,31 +7,7 @@ from .navigation import Navigation
 from .navigation_agent import NavigationAgent
 from .resources import Resources
 import shapely as sp
-from enum import Enum
 from .util import distance
-
-
-class MouseObservation(typing.List[float]):
-    class Field(Enum):
-        prey_x = 0
-        prey_y = 1
-        prey_direction = 2
-        predator_x = 3
-        predator_y = 4
-        predator_direction = 5
-        goal_distance = 6
-        predator_distance = 7
-        puffed = 8
-        puff_cooled_down = 9
-        finished = 10
-
-    def __init__(self):
-        super().__init__()
-        for i in MouseObservation.Field:
-            self.append(0.0)
-
-    def __setitem__(self, field: Field, value):
-        list.__setitem__(self, field.value, value)
 
 
 class Mouse(NavigationAgent):

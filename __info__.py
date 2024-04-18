@@ -1,5 +1,5 @@
 def __module_version__():
-	return 0, 0, 16 
+	return 0, 0, 17 
 
 
 def __module_name__():
@@ -40,14 +40,6 @@ def __readme_file__():
 
 def __package_name__():
 	return 'cellworld_game' 
-
-
-def __setup_py__():
-	return '../setup/setup.py' 
-
-
-def __setup_cfg__():
-	return '../setup/setup.cfg' 
 
 
 def __root_folder__():
