@@ -1,6 +1,4 @@
-from importlib import resources
 import os
-import pkgutil
 
 
 class Resources(object):
