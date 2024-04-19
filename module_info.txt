@@ -1,0 +1,20 @@
+{
+    "major": 0,
+    "minor": 0,
+    "build": 20,
+    "source_folder": "cellworld_game",
+    "module_name": "cellworld_game",
+    "package_name": "cellworld_game",
+    "author": "German Espinosa",
+    "author_email": "germanespinosa@gmail.com",
+    "description": "Simulation environment for the cellworld research platform",
+    "install_requires": [
+        "cellworld",
+        "pygame",
+        "shapely"
+    ],
+    "license_type": "MIT",
+    "url": "https://github.com/germanespinosa/cellworld_game",
+    "license_file": "../resources/license.txt",
+    "readme_file": "../resources/README.md"
+}
