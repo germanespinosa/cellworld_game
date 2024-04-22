@@ -19,7 +19,7 @@ model.add_agent("predator", predator)
 
 prey = Mouse(start_state=AgentState(location=(.05, .5),
                                     direction=0),
-             goal_location=(1, .5),
+             goal_location_generator=lambda is_reset: (1, .5) if is_reset else None,
              goal_threshold=.1,
              puff_threshold=.1,
              puff_cool_down_time=.5,

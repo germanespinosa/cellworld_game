@@ -6,5 +6,6 @@ from .robot import Robot
 from .mouse import Mouse
 from .ray_tracing import RayTracing
 from .navigation import Navigation
-from .util import create_hexagon, distance
+from .util import create_hexagon, distance, direction
 from .cellworld_loader import CellWorldLoader
+from .visibility import Visibility

@@ -1,10 +1,10 @@
+import math
 import typing
 import pygame
 import shapely as sp
 from .resources import Resources
 from .util import create_hexagon, move_point, distance
 from shapely.affinity import rotate, translate
-import math
 
 
 class CoordinateConverter(object):

@@ -1,7 +1,4 @@
-import typing
-
 import pygame
-
 from .util import distance, direction, direction_difference, direction_error_normalization
 from .agent import Agent
 from .navigation import Navigation
@@ -83,3 +80,7 @@ class NavigationAgent(Agent):
                                width=2)
             current_point = step
         Agent.render(self=self, surface=surface)
+
+    def stop_navigation(self):
+        self.dynamics.forward_speed = 0
+        self.dynamics.turn_speed = 0

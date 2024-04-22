@@ -1,6 +1,4 @@
-import math
 import typing
-
 import pygame
 from .agent import AgentState, Agent
 from .navigation import Navigation
@@ -14,7 +12,7 @@ class Mouse(NavigationAgent):
     def __init__(self,
                  start_state: AgentState,
                  actions: typing.List[typing.Tuple[float, float]],
-                 goal_location: typing.Tuple[float, float],
+                 goal_location_generator: typing.Callable[[bool], typing.Optional[typing.Tuple[float, float]]],
                  goal_threshold: float,
                  puff_threshold: float,
                  puff_cool_down_time: float,
@@ -26,18 +24,21 @@ class Mouse(NavigationAgent):
                                  max_turning_speed=20.0)
         self.start_state = start_state
         self.actions = actions
-        self.goal_location = goal_location
+        self.goal_location_generator = goal_location_generator
         self.goal_threshold = goal_threshold
         self.puff_threshold = puff_threshold
         self.puff_cool_down = 0
         self.puff_cool_down_time = puff_cool_down_time
         self.predator = predator
         self.finished = False
+        self.goal_achieved = False
         self.puffed = False
+        self.goal_location = None
 
     def reset(self):
         self.finished = False
         self.puff_cool_down = 0
+        self.goal_location = self.goal_location_generator(True)
         NavigationAgent.reset(self)
         self.set_state(AgentState(location=self.start_state.location,
                                   direction=self.start_state.direction))
@@ -46,6 +47,10 @@ class Mouse(NavigationAgent):
         NavigationAgent.start(self)
 
     def step(self, delta_t: float):
+        if self.finished:
+            self.stop_navigation()
+            return
+
         if self.puff_cool_down <= 0 and self.predator:
             predator_distance = distance(self.state.location,
                                          self.predator.state.location)
@@ -60,8 +65,14 @@ class Mouse(NavigationAgent):
             self.puff_cool_down = 0
 
         goal_distance = distance(self.goal_location, self.state.location)
-        self.finished = goal_distance <= self.goal_threshold
-        self.navigate(delta_t=delta_t)
+        if goal_distance <= self.goal_threshold:
+            self.goal_achieved = True
+            self.goal_location = self.goal_location_generator(False)
+
+        if self.goal_location:
+            self.navigate(delta_t=delta_t)
+        else:
+            self.finished = True
 
     @staticmethod
     def create_sprite() -> pygame.Surface:

@@ -1,7 +1,7 @@
+import math
 import pygame
 from .model import Model
 from .agent import CoordinateConverter
-import math
 from .util import generate_distinct_colors
 
 

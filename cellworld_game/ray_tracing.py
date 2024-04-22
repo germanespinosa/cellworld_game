@@ -1,10 +1,10 @@
+import pygame
+import math
 import typing
 import shapely as sp
 from .model import Model
 from .agent import AgentState
 from .util import create_line_string
-import pygame
-import math
 
 
 class RayTracing:

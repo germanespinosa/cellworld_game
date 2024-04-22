@@ -1,13 +1,12 @@
+import shapely as sp
+import time
 import random
 import typing
 import pygame
-
 from . import AgentState
 from .navigation import Navigation
 from .navigation_agent import NavigationAgent
 from .resources import Resources
-import shapely as sp
-import time
 
 
 class Robot(NavigationAgent):

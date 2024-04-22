@@ -1,7 +1,5 @@
 import math
 import typing
-from .visibility import Visibility
-import shapely as sp
 
 
 class Navigation:
