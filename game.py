@@ -1,59 +1,33 @@
 import random
-import time
-from cellworld_game import *
-from cellworld_game.cellworld_loader import CellWorldLoader
+from cellworld_game import BotEvade
 
-loader = CellWorldLoader(world_name="21_05")
-
-model = Model(arena=loader.arena,
-              occlusions=loader.occlusions,
-              time_step=.025,
-              real_time=True)
-
-predator = Robot(start_locations=loader.robot_start_locations,
-                 open_locations=loader.open_locations,
-                 navigation=loader.navigation)
-
-model.add_agent("predator", predator)
+bot_evade = BotEvade(world_name="21_05",
+                     puff_cool_down_time=.5,
+                     puff_threshold=.1,
+                     goal_location=(1.0, .5),
+                     goal_threshold=.05,
+                     time_step=.025,
+                     real_time=True,
+                     render=True,
+                     use_predator=True)
 
 
-prey = Mouse(start_state=AgentState(location=(.05, .5),
-                                    direction=0),
-             goal_location_generator=lambda is_reset: (1, .5) if is_reset else None,
-             goal_threshold=.1,
-             puff_threshold=.1,
-             puff_cool_down_time=.5,
-             navigation=loader.navigation,
-             actions=loader.full_action_list,
-             predator=predator)
+bot_evade.reset()
 
-model.add_agent("prey", prey)
+# prey
+puff_cool_down = 0
+last_destination_time = -3
+random_actions = 5
 
-finished = False
+action_count = len(bot_evade.loader.full_action_list)
 
-
-def on_quit():
-    global finished
-    finished = True
-
-
-view = View(model=model)
-view.on_quit = on_quit
-
-model.reset()
-post_observation = prey.get_observation()
-last_action_time = time.time() - 3
-t0 = time.time()
-while not prey.finished and not finished:
-    pre_observation = post_observation
-    view.draw()
-    if time.time() - last_action_time >= 3:
-        action_number = random.randint(0, len(loader.full_action_list) - 1)
-        prey.set_action(action_number)
-        last_action_time = time.time()
-    model.step()
-    post_observation = prey.get_observation()
-    t1 = time.time()
-    print(1/(t1-t0))
-    t0 = t1
-
+while bot_evade.running:
+    if bot_evade.time > last_destination_time + 2:
+        if random_actions == 0:
+            destination = bot_evade.loader.open_locations[-1]
+        else:
+            random_actions -= 1
+            destination = random.choice(bot_evade.loader.open_locations)
+        bot_evade.prey.set_destination(destination)
+        last_destination_time += 2
+    bot_evade.step()

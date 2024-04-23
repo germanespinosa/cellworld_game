@@ -1,6 +1,6 @@
 import pygame
 from .util import distance, direction, direction_difference, direction_error_normalization
-from .agent import Agent
+from .agent import Agent, CoordinateConverter
 from .navigation import Navigation
 
 
@@ -10,12 +10,17 @@ class NavigationAgent(Agent):
                  navigation: Navigation,
                  max_forward_speed: float,
                  max_turning_speed: float,
-                 threshold: float = 0.01):
+                 threshold: float = 0.01,
+                 destination_update_rate: int = 10):
         self.max_forward_speed = max_forward_speed
         self.max_turning_speed = max_turning_speed
         self.threshold = threshold
+        self.destination_update_rate = destination_update_rate
         self.navigation = navigation
+        self.new_destination = None
         self.destination = None
+        self.navigation_plan_update_wait = 0
+        self.destination_wait = 0
         self.path = []
         Agent.__init__(self)
         self.collision = False
@@ -26,9 +31,7 @@ class NavigationAgent(Agent):
         return None
 
     def set_destination(self, destination):
-        if destination != self.destination:
-            self.destination = destination
-            self.path = self.navigation.get_path(src=self.state.location, dst=self.destination)
+        self.new_destination = destination
 
     def reset(self):
         self.destination = None
@@ -38,7 +41,26 @@ class NavigationAgent(Agent):
     def start(self):
         Agent.start(self)
 
-    def navigate(self, delta_t: float):
+    def step(self, delta_t: float):
+        if not self.running:
+            self.stop_navigation()
+            return
+
+        if self.new_destination and self.destination_wait == 0:
+            self.destination = self.new_destination
+            self.new_destination = None
+            self.destination_wait = self.destination_update_rate
+            self.navigation_plan_update_wait = self.destination_update_rate
+            self.path = self.navigation.get_path(src=self.state.location, dst=self.destination)
+
+        if self.destination and self.navigation_plan_update_wait == 0:
+            self.path = self.navigation.get_path(src=self.state.location, dst=self.destination)
+
+        if self.destination_wait:
+            self.destination_wait -= 1
+
+        if self.navigation_plan_update_wait:
+            self.navigation_plan_update_wait -= 1
 
         if self.next_step() is not None:
             distance_error = distance(src=self.state.location,
@@ -65,21 +87,24 @@ class NavigationAgent(Agent):
             self.dynamics.turn_speed = 0
 
     def render(self,
-               surface: pygame.Surface):
+               surface: pygame.Surface,
+               coordinate_converter: CoordinateConverter):
         current_point = self.state.location
         for step in self.path:
             pygame.draw.line(surface,
                              (255, 0, 0),
-                             self.coordinate_converter.from_canonical(current_point),
-                             self.coordinate_converter.from_canonical(step),
+                             coordinate_converter.from_canonical(current_point),
+                             coordinate_converter.from_canonical(step),
                              2)
             pygame.draw.circle(surface=surface,
                                color=(0, 0, 255),
-                               center=self.coordinate_converter.from_canonical(step),
+                               center=coordinate_converter.from_canonical(step),
                                radius=5,
                                width=2)
             current_point = step
-        Agent.render(self=self, surface=surface)
+        Agent.render(self=self,
+                     surface=surface,
+                     coordinate_converter=coordinate_converter)
 
     def stop_navigation(self):
         self.dynamics.forward_speed = 0

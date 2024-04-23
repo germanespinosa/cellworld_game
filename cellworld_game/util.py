@@ -222,6 +222,8 @@ def normalize_direction(direction: float):
     while direction > 180:
         direction -= 360
     return direction
+
+
 def direction_difference(direction1: float, direction2: float):
     direction1 = normalize_direction(direction1)
     direction2 = normalize_direction(direction2)
@@ -234,5 +236,5 @@ def direction_difference(direction1: float, direction2: float):
 
 
 def direction_error_normalization(direction_error: float):
-    pi_err = direction_error / 2
+    pi_err = direction_error / 8
     return 1 / (pi_err * pi_err + 1)

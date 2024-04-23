@@ -3,7 +3,7 @@ import time
 import random
 import typing
 import pygame
-from . import AgentState
+from .agent import AgentState
 from .navigation import Navigation
 from .navigation_agent import NavigationAgent
 from .resources import Resources
@@ -24,7 +24,8 @@ class Robot(NavigationAgent):
 
     def reset(self):
         NavigationAgent.reset(self)
-        self.set_state(AgentState(location=random.choice(self.start_locations), direction=180))
+        self.set_state(AgentState(location=random.choice(self.start_locations),
+                                  direction=180))
 
     @staticmethod
     def create_sprite() -> pygame.Surface:
@@ -37,13 +38,5 @@ class Robot(NavigationAgent):
         return sp.Polygon([(.02, 0.013), (-.02, 0.013), (-.02, -0.013), (.02, -0.013), (.025, -0.01), (.025, 0.01)])
 
     def step(self, delta_t: float):
-        if self.last_destination_time + 1 < time.time():
-            observation = self.get_observation()
-            self.last_destination_time = time.time()
-            if "prey" in observation["agent_states"] and observation["agent_states"]["prey"]:
-                self.set_destination(observation["agent_states"]["prey"][0])
-
-        if not self.path:
-            self.set_destination(random.choice(self.open_locations))
-
-        self.navigate(delta_t=delta_t)
+        NavigationAgent.step(self=self,
+                             delta_t=delta_t)

@@ -84,6 +84,7 @@ class Agent(object):
         self.model = None
         self.trajectory: typing.List[AgentState] = []
         self.coordinate_converter: typing.Optional[CoordinateConverter] = None
+        self.running = False
 
     def set_sprite_size(self, size: tuple):
         self.sprite = pygame.transform.scale(self.create_sprite(), size)
@@ -100,6 +101,7 @@ class Agent(object):
         self.trajectory.clear()
         if self.on_reset:
             self.on_reset()
+        self.running = True
 
     def start(self) -> None:
         if self.on_start:
@@ -156,10 +158,11 @@ class Agent(object):
         return stats
 
     def render(self,
-               surface: pygame.Surface):
+               surface: pygame.Surface,
+               coordinate_converter: CoordinateConverter):
         agent_sprite: pygame.Surface = self.get_sprite()
         width, height = agent_sprite.get_size()
-        screen_x, screen_y = self.coordinate_converter.from_canonical(self.state.location)
+        screen_x, screen_y = coordinate_converter.from_canonical(self.state.location)
         surface.blit(agent_sprite, (screen_x - width / 2, screen_y - height / 2))
 
     def set_coordinate_converter(self,

@@ -1,5 +1,6 @@
 import math
 import pygame
+import typing
 from .model import Model
 from .agent import CoordinateConverter
 from .util import generate_distinct_colors
@@ -30,7 +31,6 @@ class View(object):
         self.agent_perspective = -1
         self.show_sprites = True
         self.target = None
-        self.screen_target = None
         self.on_mouse_button_down = None
         self.on_mouse_button_up = None
         self.on_mouse_move = None
@@ -38,6 +38,11 @@ class View(object):
         self.on_key_up = None
         self.on_quit = None
         self.pressed_keys = pygame.key.get_pressed()
+        self.render_steps: typing.List[typing.Callable[[pygame.Surface, CoordinateConverter], None]] = []
+
+    def add_render_step(self,
+                        render_step: typing.Callable[[pygame.Surface, CoordinateConverter], None]):
+        self.render_steps.append(render_step)
 
     def draw_polygon(self, polygon, color):
         """Draws a hexagon at the specified position and size."""
@@ -80,16 +85,14 @@ class View(object):
 
         for (name, agent), color in zip(self.model.agents.items(), self.agent_colors):
             if self.show_sprites:
-                agent.render(surface=self.screen)
+                agent.render(surface=self.screen,
+                             coordinate_converter=self.coordinate_converter)
             else:
                 self.draw_polygon(self.model.agents[name].get_polygon(), color=self.agent_colors[name])
 
-        if self.screen_target:
-            pygame.draw.circle(surface=self.screen,
-                               color=(255, 0, 255),
-                               center=self.screen_target,
-                               radius=3,
-                               width=2)
+        for render_step in self.render_steps:
+            render_step(self.screen, self.coordinate_converter)
+
         self.__process_events__()
         pygame.display.flip()
 

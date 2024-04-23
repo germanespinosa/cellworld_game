@@ -21,6 +21,9 @@ class Model(object):
         self.agents: typing.Dict[str, Agent] = {}
         self.visibility = Visibility(arena=self.arena, occlusions=self.occlusions)
         self.last_step = None
+        self.time = 0
+        self.running = False
+        self.step_count = 0
 
     def add_agent(self, name: str, agent: Agent):
         self.agents[name] = agent
@@ -28,12 +31,14 @@ class Model(object):
         agent.model = self
 
     def reset(self):
+        self.running = True
         for name, agent in self.agents.items():
             agent.reset()
         observations = self.get_observations()
         for name, agent in self.agents.items():
             agent.start()
         self.last_step = time.time()
+        self.step_count = 0
 
     def is_valid_state(self, agent_polygon: sp.Polygon, collisions: bool) -> bool:
         if not self.arena.contains(agent_polygon):
@@ -109,7 +114,7 @@ class Model(object):
                 observation["agent_states"][dst_name] = None
         return observation
 
-    def step(self):
+    def step(self) -> float:
         if self.real_time:
             while self.last_step + self.time_step > time.time():
                 pass
@@ -140,3 +145,6 @@ class Model(object):
                         agent.set_state(state=new_state)
         for name, agent in self.agents.items():
             agent.step(delta_t=self.time_step)
+        self.time += self.time_step
+        self.step_count += 1
+        return self.time_step
