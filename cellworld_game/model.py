@@ -2,7 +2,7 @@ import math
 import time
 import typing
 import shapely as sp
-from .agent import Agent
+from .agent import Agent, AgentState
 from .visibility import Visibility
 from .geometry import atan2
 
@@ -24,6 +24,17 @@ class Model(object):
         self.time = 0
         self.running = False
         self.step_count = 0
+
+    def set_agents_state(self, agents_state: typing.Dict[str, AgentState],
+                         delta_t: float = 0):
+        for agent_name, agent_state in agents_state.items():
+            if agent_name in self.agents:
+                self.agents[agent_name].set_state(agent_state)
+        self.__update_state__(delta_t)
+
+    def __update_state__(self,
+                         delta_t: float = 0):
+        pass
 
     def add_agent(self, name: str, agent: Agent):
         self.agents[name] = agent
