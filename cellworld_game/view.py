@@ -84,11 +84,12 @@ class View(object):
             self.draw_polygon(occlusion, self.occlusion_color)
 
         for (name, agent), color in zip(self.model.agents.items(), self.agent_colors):
-            if self.show_sprites:
-                agent.render(surface=self.screen,
-                             coordinate_converter=self.coordinate_converter)
-            else:
-                self.draw_polygon(self.model.agents[name].get_polygon(), color=self.agent_colors[name])
+            if agent.visible:
+                if self.show_sprites:
+                    agent.draw(surface=self.screen,
+                               coordinate_converter=self.coordinate_converter)
+                else:
+                    self.draw_polygon(self.model.agents[name].get_polygon(), color=self.agent_colors[name])
 
         for render_step in self.render_steps:
             render_step(self.screen, self.coordinate_converter)
@@ -102,23 +103,19 @@ class View(object):
                 if self.on_quit:
                     self.on_quit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                canonical_x_y = self.coordinate_converter.to_canonical(x, y)
+                canonical_x_y = self.coordinate_converter.to_canonical(event.pos)
                 if self.on_mouse_button_down:
                     self.on_mouse_button_down(event.button, canonical_x_y)
             elif event.type == pygame.MOUSEBUTTONUP:
-                x, y = event.pos
-                canonical_x_y = self.coordinate_converter.to_canonical(x, y)
+                canonical_x_y = self.coordinate_converter.to_canonical(event.pos)
                 if self.on_mouse_button_up:
                     self.on_mouse_button_up(event.button, canonical_x_y)
             elif event.type == pygame.MOUSEMOTION:
-                x, y = event.pos
-                canonical_x_y = self.coordinate_converter.to_canonical(x, y)
+                canonical_x_y = self.coordinate_converter.to_canonical(event.pos)
                 if self.on_mouse_move:
                     self.on_mouse_move(canonical_x_y)
             elif event.type == pygame.MOUSEWHEEL:
-                x, y = event.pos
-                canonical_x_y = self.coordinate_converter.to_canonical(x, y)
+                canonical_x_y = self.coordinate_converter.to_canonical(event.pos)
                 if self.on_mouse_wheel:
                     self.on_mouse_wheel(event.button, canonical_x_y)
             elif event.type == pygame.KEYDOWN:

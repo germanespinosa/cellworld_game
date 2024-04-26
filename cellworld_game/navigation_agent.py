@@ -86,11 +86,13 @@ class NavigationAgent(Agent):
             self.dynamics.forward_speed = 0
             self.dynamics.turn_speed = 0
 
-    def render(self,
-               surface: pygame.Surface,
-               coordinate_converter: CoordinateConverter):
+    def draw(self,
+             surface: pygame.Surface,
+             coordinate_converter: CoordinateConverter):
         current_point = self.state.location
         for step in self.path:
+            if step is None:
+                continue
             pygame.draw.line(surface,
                              (255, 0, 0),
                              coordinate_converter.from_canonical(current_point),
@@ -102,9 +104,9 @@ class NavigationAgent(Agent):
                                radius=5,
                                width=2)
             current_point = step
-        Agent.render(self=self,
-                     surface=surface,
-                     coordinate_converter=coordinate_converter)
+        Agent.draw(self=self,
+                   surface=surface,
+                   coordinate_converter=coordinate_converter)
 
     def stop_navigation(self):
         self.dynamics.forward_speed = 0

@@ -4,7 +4,6 @@ from cellworld_game import BotEvade
 bot_evade = BotEvade(world_name="21_05",
                      puff_cool_down_time=.5,
                      puff_threshold=.1,
-                     goal_location=(1.0, .5),
                      goal_threshold=.05,
                      time_step=.025,
                      real_time=True,
@@ -23,8 +22,9 @@ action_count = len(bot_evade.loader.full_action_list)
 
 while bot_evade.running:
     if bot_evade.time > last_destination_time + 2:
-        if random_actions == 0:
-            destination = bot_evade.loader.open_locations[-1]
+        if bot_evade.goal_achieved or random_actions == 0:
+            destination = bot_evade.goal_location
+            random_actions = 5
         else:
             random_actions -= 1
             destination = random.choice(bot_evade.loader.open_locations)

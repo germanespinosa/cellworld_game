@@ -1,10 +1,10 @@
 import random
-from .util import distance
-from .model import Model
-from .agent import AgentState, CoordinateConverter
-from .mouse import Mouse
-from .robot import Robot
-from .cellworld_loader import CellWorldLoader
+from ..util import distance
+from ..model import Model
+from ..agent import AgentState, CoordinateConverter
+from ..mouse import Mouse
+from ..robot import Robot
+from ..cellworld_loader import CellWorldLoader
 
 
 class BotEvade(Model):
@@ -48,7 +48,7 @@ class BotEvade(Model):
         self.running = False
 
         if self.render:
-            from .view import View
+            from ..view import View
             self.view = View(model=self)
             self.view.on_quit = self.__on_quit__
 
@@ -78,7 +78,7 @@ class BotEvade(Model):
 
         self.puffed: bool = False
         self.puff_cool_down: float = 0
-        self.goal_achieved: bool = True
+        self.goal_achieved: bool = False
         self.predator_prey_distance: float = 1
         self.prey_goal_distance: float = 0
         self.puff_count = 0
@@ -115,6 +115,7 @@ class BotEvade(Model):
 
     def reset(self):
         Model.reset(self)
+        self.goal_achieved = False
         self.puff_count = 0
         self.__update_state__()
 

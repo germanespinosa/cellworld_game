@@ -17,7 +17,10 @@ class CoordinateConverter(object):
         self.screen_offset = (self.screen_width - self.screen_height) / 2
         self.hexa_ratio = (math.sqrt(3) / 2)
 
-    def from_canonical(self, canonical: tuple):
+    def from_canonical(self, canonical: typing.Union[tuple, float]):
+        if isinstance(canonical, float):
+            return canonical * self.screen_width
+
         canonical_x, canonical_y = canonical
         screen_x = canonical_x * self.screen_width
         if self.flip_y:
@@ -26,7 +29,11 @@ class CoordinateConverter(object):
             screen_y = canonical_y * self.screen_width - self.screen_offset
         return screen_x, screen_y
 
-    def to_canonical(self, screen_x: int, screen_y: int):
+    def to_canonical(self, screen: typing.Union[tuple, float]):
+        if isinstance(screen, float):
+            return screen / self.screen_width
+
+        screen_x, screen_y = screen
         y = self.screen_height - screen_y + self.screen_offset
         canonical_y = y / self.screen_height * self.hexa_ratio
         canonical_x = screen_x / self.screen_width
@@ -70,6 +77,7 @@ class Agent(object):
     def __init__(self,
                  view_field: float = 180,
                  collision: bool = True):
+        self.visible = True
         self.view_field = view_field
         self._state: AgentState = AgentState()
         self.dynamics: AgentDynamics = AgentDynamics(forward_speed=0,
@@ -157,9 +165,9 @@ class Agent(object):
         stats["distance"] = dist
         return stats
 
-    def render(self,
-               surface: pygame.Surface,
-               coordinate_converter: CoordinateConverter):
+    def draw(self,
+             surface: pygame.Surface,
+             coordinate_converter: CoordinateConverter):
         agent_sprite: pygame.Surface = self.get_sprite()
         width, height = agent_sprite.get_size()
         screen_x, screen_y = coordinate_converter.from_canonical(self.state.location)

@@ -9,4 +9,4 @@ from .navigation import Navigation
 from .util import create_hexagon, distance, direction
 from .cellworld_loader import CellWorldLoader
 from .visibility import Visibility
-from .botevade import BotEvade
+from .tasks import BotEvade, Oasis, DualEvade

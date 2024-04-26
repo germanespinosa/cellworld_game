@@ -1,5 +1,4 @@
 import shapely as sp
-import time
 import random
 import typing
 import pygame
