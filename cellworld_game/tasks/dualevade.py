@@ -11,6 +11,7 @@ class DualEvadePreyData:
     def __init__(self):
         self.puffed = False
         self.goal_achieved = False
+        self.predator_visible = False
         self.predator_prey_distance = 1
         self.prey_goal_distance = 0
         self.puff_count = 0
@@ -18,6 +19,7 @@ class DualEvadePreyData:
     def reset(self):
         self.puffed = False
         self.goal_achieved = False
+        self.predator_visible = False
         self.predator_prey_distance = 1
         self.prey_goal_distance = 0
         self.puff_count = 0
@@ -103,11 +105,12 @@ class DualEvade(Model):
 
     def __update_state__(self,
                          delta_t: float = 0):
+        self.mouse_visible = self.visibility.line_of_sight(self.prey_1.state.location, self.prey_2.state.location)
         if self.use_predator and self.puff_cool_down <= 0:
             self.prey_data_1.predator_prey_distance = distance(self.prey_1.state.location,
                                                                self.predator.state.location)
-            prey_1_visible = self.prey_1.visible and self.visibility.line_of_sight(self.prey_1.state.location, self.predator.state.location)
-            if prey_1_visible:
+            self.prey_data_1.predator_visible = self.prey_1.visible and self.visibility.line_of_sight(self.prey_1.state.location, self.predator.state.location)
+            if self.prey_data_1.predator_visible:
                 if self.prey_data_1.predator_prey_distance <= self.puff_threshold:
                     self.prey_data_1.puffed = True
                     self.prey_data_1.puff_count += 1
@@ -116,21 +119,23 @@ class DualEvade(Model):
             self.prey_data_2.predator_prey_distance = distance(self.prey_2.state.location,
                                                                self.predator.state.location)
 
-            prey_2_visible = self.prey_2.visible and self.visibility.line_of_sight(self.prey_2.state.location, self.predator.state.location)
-            if prey_2_visible:
+            self.prey_data_2.predator_visible = self.prey_2.visible and self.visibility.line_of_sight(self.prey_2.state.location, self.predator.state.location)
+            if self.prey_data_2.predator_visible:
                 if self.prey_data_2.predator_prey_distance <= self.puff_threshold:
                     self.prey_data_2.puffed = True
                     self.prey_data_2.puff_count += 1
                     self.puff_cool_down = self.puff_cool_down_time
 
             closest_visible_prey_location = None
-            if prey_1_visible:
+            if self.prey_data_1.predator_visible:
                 closest_visible_prey_location = self.prey_1.state.location
 
-            if prey_2_visible:
+            if self.prey_data_2.predator_visible:
                 if closest_visible_prey_location:
                     if self.prey_data_2.predator_prey_distance <= self.prey_data_1.predator_prey_distance:
                         closest_visible_prey_location = self.prey_2.state.location
+                else:
+                    closest_visible_prey_location = self.prey_2.state.location
 
             if closest_visible_prey_location:
                 self.predator.set_destination(self.prey_2.state.location)

@@ -82,13 +82,15 @@ class BotEvade(Model):
         self.predator_prey_distance: float = 1
         self.prey_goal_distance: float = 0
         self.puff_count = 0
+        self.predator_visible = False
 
     def __update_state__(self,
                          delta_t: float = 0):
         if self.use_predator and self.puff_cool_down <= 0:
             self.predator_prey_distance = distance(self.prey.state.location,
                                                    self.predator.state.location)
-            if self.visibility.line_of_sight(self.prey.state.location, self.predator.state.location):
+            self.predator_visible = self.visibility.line_of_sight(self.prey.state.location, self.predator.state.location)
+            if self.predator_visible:
                 if self.predator_prey_distance <= self.puff_threshold:
                     self.puffed = True
                     self.puff_count += 1
@@ -116,6 +118,7 @@ class BotEvade(Model):
     def reset(self):
         Model.reset(self)
         self.goal_achieved = False
+        self.predator_visible = False
         self.puff_count = 0
         self.__update_state__()
 
