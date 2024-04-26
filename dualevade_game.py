@@ -22,14 +22,14 @@ action_count = len(bot_evade.loader.full_action_list)
 
 while bot_evade.running:
     if bot_evade.time > last_destination_time + 3:
-        if not bot_evade.goal_achieved_1:
+        if not bot_evade.prey_data_1.goal_achieved:
             if random_actions == 0:
                 destination = bot_evade.goal_location
             else:
                 random_actions -= 1
                 destination = random.choice(bot_evade.loader.open_locations)
             bot_evade.prey_1.set_destination(destination)
-        if not bot_evade.goal_achieved_2:
+        if not bot_evade.prey_data_2.goal_achieved:
             if random_actions == 0:
                 destination = bot_evade.goal_location
             else:

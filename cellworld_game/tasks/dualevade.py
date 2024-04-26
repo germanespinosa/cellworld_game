@@ -7,6 +7,21 @@ from ..robot import Robot
 from ..cellworld_loader import CellWorldLoader
 
 
+class DualEvadePreyData:
+    def __init__(self):
+        self.puffed = False
+        self.goal_achieved = False
+        self.predator_prey_distance = 1
+        self.prey_goal_distance = 0
+        self.puff_count = 0
+
+    def reset(self):
+        self.puffed = False
+        self.goal_achieved = False
+        self.predator_prey_distance = 1
+        self.prey_goal_distance = 0
+        self.puff_count = 0
+
 class DualEvade(Model):
     def __init__(self,
                  world_name: str = "21_05",
@@ -40,7 +55,7 @@ class DualEvade(Model):
             self.add_agent("predator", self.predator)
 
         self.prey_1 = Mouse(start_state=AgentState(location=(.05, .5),
-                                                 direction=0),
+                                                   direction=0),
                             navigation=self.loader.navigation)
 
         self.add_agent("prey_1", self.prey_1)
@@ -82,38 +97,30 @@ class DualEvade(Model):
 
                 self.view.add_render_step(render_puff_area)
 
-        self.puffed_1: bool = False
-        self.puffed_2: bool = False
         self.puff_cool_down: float = 0
-        self.goal_achieved_1: bool = False
-        self.goal_achieved_2: bool = False
-        self.predator_prey_1_distance: float = 1
-        self.prey_1_goal_distance: float = 0
-        self.predator_prey_2_distance: float = 1
-        self.prey_2_goal_distance: float = 0
-        self.puff_1_count = 0
-        self.puff_2_count = 0
+        self.prey_data_1 = DualEvadePreyData()
+        self.prey_data_2 = DualEvadePreyData()
 
     def __update_state__(self,
                          delta_t: float = 0):
         if self.use_predator and self.puff_cool_down <= 0:
-            self.predator_prey_1_distance = distance(self.prey_1.state.location,
-                                                     self.predator.state.location)
+            self.prey_data_1.predator_prey_distance = distance(self.prey_1.state.location,
+                                                               self.predator.state.location)
             prey_1_visible = self.prey_1.visible and self.visibility.line_of_sight(self.prey_1.state.location, self.predator.state.location)
             if prey_1_visible:
-                if self.predator_prey_1_distance <= self.puff_threshold:
-                    self.puffed_1 = True
-                    self.puff_1_count += 1
+                if self.prey_data_1.predator_prey_distance <= self.puff_threshold:
+                    self.prey_data_1.puffed = True
+                    self.prey_data_1.puff_count += 1
                     self.puff_cool_down = self.puff_cool_down_time
 
-            self.predator_prey_2_distance = distance(self.prey_2.state.location,
-                                                     self.predator.state.location)
+            self.prey_data_2.predator_prey_distance = distance(self.prey_2.state.location,
+                                                               self.predator.state.location)
 
             prey_2_visible = self.prey_2.visible and self.visibility.line_of_sight(self.prey_2.state.location, self.predator.state.location)
             if prey_2_visible:
-                if self.predator_prey_2_distance <= self.puff_threshold:
-                    self.puffed_2 = True
-                    self.puff_2_count += 1
+                if self.prey_data_2.predator_prey_distance <= self.puff_threshold:
+                    self.prey_data_2.puffed = True
+                    self.prey_data_2.puff_count += 1
                     self.puff_cool_down = self.puff_cool_down_time
 
             closest_visible_prey_location = None
@@ -122,7 +129,7 @@ class DualEvade(Model):
 
             if prey_2_visible:
                 if closest_visible_prey_location:
-                    if self.predator_prey_2_distance <= self.predator_prey_1_distance:
+                    if self.prey_data_2.predator_prey_distance <= self.prey_data_1.predator_prey_distance:
                         closest_visible_prey_location = self.prey_2.state.location
 
             if closest_visible_prey_location:
@@ -136,31 +143,28 @@ class DualEvade(Model):
         else:
             self.puff_cool_down = 0
 
-        self.prey_1_goal_distance = distance(self.goal_location, self.prey_1.state.location)
-
-        if self.prey_1_goal_distance <= self.goal_threshold:
-            self.goal_achieved_1 = True
+        self.prey_data_1.prey_goal_distance = distance(self.goal_location, self.prey_1.state.location)
+        if self.prey_data_1.prey_goal_distance <= self.goal_threshold:
+            self.prey_data_1.goal_achieved = True
             self.prey_1.visible = False
 
-        self.prey_2_goal_distance = distance(self.goal_location, self.prey_2.state.location)
-
-        if self.prey_2_goal_distance <= self.goal_threshold:
-            self.goal_achieved_2 = True
+        self.prey_data_2.prey_goal_distance = distance(self.goal_location, self.prey_2.state.location)
+        if self.prey_data_2.prey_goal_distance <= self.goal_threshold:
+            self.prey_data_2.goal_achieved = True
             self.prey_2.visible = False
 
-        if self.goal_achieved_1 and self.goal_achieved_2:
+        if self.prey_data_1.goal_achieved and self.prey_data_2.goal_achieved:
             self.running = False
 
     def __on_quit__(self):
         self.running = False
 
     def reset(self):
-        self.goal_achieved_1 = False
-        self.goal_achieved_2 = False
+        self.prey_data_1.reset()
+        self.prey_data_2.reset()
         self.prey_1.visible = True
         self.prey_2.visible = True
         Model.reset(self)
-        self.puff_count = 0
         self.__update_state__()
 
     def step(self) -> float:
