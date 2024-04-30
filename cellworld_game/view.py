@@ -37,6 +37,7 @@ class View(object):
         self.on_mouse_wheel = None
         self.on_key_up = None
         self.on_quit = None
+        self.on_frame = None
         self.pressed_keys = pygame.key.get_pressed()
         self.render_steps: typing.List[typing.Callable[[pygame.Surface, CoordinateConverter], None]] = []
 
@@ -95,6 +96,8 @@ class View(object):
             render_step(self.screen, self.coordinate_converter)
 
         self.__process_events__()
+        if self.on_frame:
+            self.on_frame(self.screen, self.coordinate_converter)
         pygame.display.flip()
 
     def __process_events__(self):

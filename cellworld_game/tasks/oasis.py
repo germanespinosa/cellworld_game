@@ -58,8 +58,6 @@ class Oasis(Model):
 
         self.add_agent("prey", self.prey)
 
-        self.running = False
-
         if self.render:
             import pygame
             from ..view import View
@@ -141,12 +139,12 @@ class Oasis(Model):
                 self.goal_achieved_time = 0
                 self.goal_achieved = False
                 if self.goal_location is None:
-                    self.running = False
+                    self.stop()
             else:
                 self.goal_achieved = True
 
     def __on_quit__(self):
-        self.running = False
+        self.stop()
 
     def __update_goal__(self):
         if self.goal_sequence:

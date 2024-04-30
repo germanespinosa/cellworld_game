@@ -23,7 +23,15 @@ class Model(object):
         self.last_step = None
         self.time = 0
         self.running = False
+        self.episode_count = 0
         self.step_count = 0
+        self.before_step = None
+        self.after_step = None
+        self.before_stop = None
+        self.after_stop = None
+        self.before_reset = None
+        self.after_reset = None
+        self.on_close = None
 
     def set_agents_state(self, agents_state: typing.Dict[str, AgentState],
                          delta_t: float = 0):
@@ -42,7 +50,12 @@ class Model(object):
         agent.model = self
 
     def reset(self):
+        if self.running:
+            self.stop()
+        if self.before_reset is not None:
+            self.before_reset()
         self.running = True
+        self.episode_count += 1
         for name, agent in self.agents.items():
             agent.reset()
         observations = self.get_observations()
@@ -50,6 +63,15 @@ class Model(object):
             agent.start()
         self.last_step = time.time()
         self.step_count = 0
+        if self.after_reset is not None:
+            self.after_reset()
+
+    def stop(self):
+        if self.before_stop is not None:
+            self.before_stop()
+        self.running = False
+        if self.after_stop is not None:
+            self.after_stop()
 
     def is_valid_state(self, agent_polygon: sp.Polygon, collisions: bool) -> bool:
         if not self.arena.contains(agent_polygon):
@@ -126,6 +148,12 @@ class Model(object):
         return observation
 
     def step(self) -> float:
+        if not self.running:
+            return 0
+
+        if self.before_step is not None:
+            self.before_step()
+
         if self.real_time:
             while self.last_step + self.time_step > time.time():
                 pass
@@ -158,4 +186,12 @@ class Model(object):
             agent.step(delta_t=self.time_step)
         self.time += self.time_step
         self.step_count += 1
+        if self.after_step is not None:
+            self.after_step()
         return self.time_step
+
+    def close(self):
+        if self.running:
+            self.stop()
+        if self.on_close:
+            self.on_close()

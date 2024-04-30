@@ -113,7 +113,7 @@ class BotEvade(Model):
             self.running = False
 
     def __on_quit__(self):
-        self.running = False
+        self.stop()
 
     def reset(self):
         Model.reset(self)

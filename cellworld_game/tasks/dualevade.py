@@ -24,6 +24,7 @@ class DualEvadePreyData:
         self.prey_goal_distance = 0
         self.puff_count = 0
 
+
 class DualEvade(Model):
     def __init__(self,
                  world_name: str = "21_05",
@@ -67,8 +68,6 @@ class DualEvade(Model):
                             navigation=self.loader.navigation)
 
         self.add_agent("prey_2", self.prey_2)
-
-        self.running = False
 
         if self.render:
             from ..view import View
@@ -159,10 +158,10 @@ class DualEvade(Model):
             self.prey_2.visible = False
 
         if self.prey_data_1.goal_achieved and self.prey_data_2.goal_achieved:
-            self.running = False
+            self.stop()
 
     def __on_quit__(self):
-        self.running = False
+        self.stop()
 
     def reset(self):
         self.prey_data_1.reset()

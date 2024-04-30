@@ -1,7 +1,7 @@
 {
     "major": 0,
     "minor": 0,
-    "build": 60,
+    "build": 68,
     "source_folder": "cellworld_game",
     "module_name": "cellworld_game",
     "package_name": "cellworld_game",
