@@ -1,3 +1,4 @@
+import metrica
 import math
 import time
 import typing
@@ -151,43 +152,50 @@ class Model(object):
         if not self.running:
             return 0
 
-        if self.before_step is not None:
-            self.before_step()
+        with metrica.CodeBlock("model.before_step"):
+            if self.before_step is not None:
+                self.before_step()
 
-        if self.real_time:
-            while self.last_step + self.time_step > time.time():
-                pass
+        with metrica.CodeBlock("model.real_time_wait"):
+            if self.real_time:
+                while self.last_step + self.time_step > time.time():
+                    pass
 
-        self.last_step = time.time()
-        for name, agent in self.agents.items():
-            dynamics = agent.dynamics
-            distance, rotation = dynamics.change(delta_t=self.time_step)
-            new_state = agent.state.update(rotation=rotation,
-                                           distance=distance)
-            agent_polygon = agent.get_polygon(state=new_state)
-            if self.is_valid_state(agent_polygon=agent_polygon,
-                                   collisions=agent.collision):
-                agent.set_state(state=new_state)
-            else: #try only rotation
-                new_state = agent.state.update(rotation=rotation,
-                                               distance=0)
-                agent_polygon = agent.get_polygon(state=new_state)
-                if self.is_valid_state(agent_polygon=agent_polygon,
-                                       collisions=agent.collision):
-                    agent.set_state(state=new_state)
-                else: #try only translation
-                    new_state = agent.state.update(rotation=0,
+        with metrica.CodeBlock("model.step"):
+            self.last_step = time.time()
+            with metrica.CodeBlock("update_agents_state"):
+                for name, agent in self.agents.items():
+                    dynamics = agent.dynamics
+                    distance, rotation = dynamics.change(delta_t=self.time_step)
+                    new_state = agent.state.update(rotation=rotation,
                                                    distance=distance)
                     agent_polygon = agent.get_polygon(state=new_state)
                     if self.is_valid_state(agent_polygon=agent_polygon,
                                            collisions=agent.collision):
                         agent.set_state(state=new_state)
-        for name, agent in self.agents.items():
-            agent.step(delta_t=self.time_step)
-        self.time += self.time_step
-        self.step_count += 1
-        if self.after_step is not None:
-            self.after_step()
+                    else: #try only rotation
+                        new_state = agent.state.update(rotation=rotation,
+                                                       distance=0)
+                        agent_polygon = agent.get_polygon(state=new_state)
+                        if self.is_valid_state(agent_polygon=agent_polygon,
+                                               collisions=agent.collision):
+                            agent.set_state(state=new_state)
+                        else: #try only translation
+                            new_state = agent.state.update(rotation=0,
+                                                           distance=distance)
+                            agent_polygon = agent.get_polygon(state=new_state)
+                            if self.is_valid_state(agent_polygon=agent_polygon,
+                                                   collisions=agent.collision):
+                                agent.set_state(state=new_state)
+            with metrica.CodeBlock("agent_steps"):
+                for name, agent in self.agents.items():
+                    agent.step(delta_t=self.time_step)
+            self.time += self.time_step
+            self.step_count += 1
+
+        with metrica.CodeBlock("model.after_step"):
+            if self.after_step is not None:
+                self.after_step()
         return self.time_step
 
     def close(self):

@@ -110,7 +110,7 @@ class BotEvade(Model):
 
         if self.prey_goal_distance <= self.goal_threshold:
             self.goal_achieved = True
-            self.running = False
+            self.stop()
 
     def __on_quit__(self):
         self.stop()
