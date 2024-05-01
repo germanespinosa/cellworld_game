@@ -43,7 +43,7 @@ class NavigationAgent(Agent):
         Agent.start(self)
 
     def step(self, delta_t: float):
-        with metrica.CodeBlock("navigation_agent.step"):
+        with pulsekit.CodeBlock("navigation_agent.step"):
             if not self.running:
                 self.stop_navigation()
                 return
