@@ -137,7 +137,7 @@ class DualEvade(Model):
                     closest_visible_prey_location = self.prey_2.state.location
 
             if closest_visible_prey_location:
-                self.predator.set_destination(self.prey_2.state.location)
+                self.predator.set_destination(closest_visible_prey_location)
 
             if not self.predator.path:
                 self.predator.set_destination(random.choice(self.loader.open_locations))
