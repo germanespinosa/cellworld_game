@@ -1,7 +1,7 @@
 {
     "major": 0,
     "minor": 0,
-    "build": 74,
+    "build": 75,
     "source_folder": "cellworld_game",
     "module_name": "cellworld_game",
     "package_name": "cellworld_game",
@@ -11,7 +11,8 @@
     "install_requires": [
         "cellworld",
         "pygame",
-        "shapely"
+        "shapely",
+        "pulsekit"
     ],
     "license_type": "MIT",
     "url": "https://github.com/germanespinosa/cellworld_game",

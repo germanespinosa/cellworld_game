@@ -1,6 +1,5 @@
 import random
 import time
-
 import pygame
 
 from cellworld_game import *

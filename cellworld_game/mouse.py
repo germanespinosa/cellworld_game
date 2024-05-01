@@ -1,4 +1,3 @@
-import typing
 import pygame
 from .agent import AgentState
 from .navigation import Navigation

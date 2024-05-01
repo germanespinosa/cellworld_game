@@ -1,4 +1,4 @@
-import metrica
+import pulsekit
 import pygame
 from .util import distance, direction, direction_difference, direction_error_normalization
 from .agent import Agent, CoordinateConverter
