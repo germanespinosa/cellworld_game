@@ -1,6 +1,6 @@
 from .view import View
 from .model import Model
-from .agent import Agent, AgentDynamics, AgentState
+from .agent import Agent, AgentDynamics, AgentState, CoordinateConverter
 from .resources import Resources
 from .robot import Robot
 from .mouse import Mouse

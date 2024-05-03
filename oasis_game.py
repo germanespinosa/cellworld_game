@@ -1,7 +1,7 @@
 import random
 from cellworld_game import Oasis
 
-bot_evade = Oasis(world_name="oasis_island7_02",
+bot_evade = Oasis(world_name="21_05",
                   goal_locations=[(0.265625, 0.5), (0.3125, 0.7435696448143734), (0.3125, 0.1752404735808355), (0.4765625, 0.45940505919760444), (0.640625, 0.7435696448143734), (0.6875, 0.1752404735808355), (0.78125, 0.5)],
                   puff_cool_down_time=.5,
                   puff_threshold=.1,
