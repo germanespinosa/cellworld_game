@@ -165,13 +165,14 @@ class Agent(object):
         stats["distance"] = dist
         return stats
 
-    def draw(self,
-             surface: pygame.Surface,
-             coordinate_converter: CoordinateConverter):
-        agent_sprite: pygame.Surface = self.get_sprite()
-        width, height = agent_sprite.get_size()
-        screen_x, screen_y = coordinate_converter.from_canonical(self.state.location)
-        surface.blit(agent_sprite, (screen_x - width / 2, screen_y - height / 2))
+    def render(self,
+               surface: pygame.Surface,
+               coordinate_converter: CoordinateConverter):
+        if self.visible:
+            agent_sprite: pygame.Surface = self.get_sprite()
+            width, height = agent_sprite.get_size()
+            screen_x, screen_y = coordinate_converter.from_canonical(self.state.location)
+            surface.blit(agent_sprite, (screen_x - width / 2, screen_y - height / 2))
 
     def set_coordinate_converter(self,
                                  coordinate_converter: CoordinateConverter):

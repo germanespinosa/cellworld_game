@@ -18,12 +18,21 @@ class View(object):
         self.hexa_ratio = (math.sqrt(3) / 2)
         self.coordinate_converter = CoordinateConverter(screen_size=(screen_width, int(self.hexa_ratio * screen_width)),
                                                         flip_y=flip_y)
+        self.render_steps: typing.List[typing.Callable[[pygame.Surface, CoordinateConverter], None]] = []
+        self.render_steps_z_index: typing.List[int] = []
+        self.render_steps_sequence: typing.List[int] = []
+        self.add_render_step(render_step=self.render_arena, z_index=0)
+        self.add_render_step(render_step=self.render_occlusions, z_index=10)
+        self.add_render_step(render_step=self.render_visibility, z_index=20)
         for agent_name, agent in model.agents.items():
             agent.set_sprite_size((screen_width/10, screen_width/10))
             agent.set_coordinate_converter(self.coordinate_converter)
+            self.add_render_step(agent.render, z_index=100)
         self.screen = pygame.display.set_mode(self.coordinate_converter.screen_size)
         self.arena_color = (255, 255, 255)
         self.occlusion_color = (50, 50, 50)
+        self.visibility_color = (180, 180, 180)
+        self.background_color = (0, 0, 0)
         self.agent_colors = {agent_name: color for agent_name, color
                              in zip(self.model.agents.keys(),
                                     generate_distinct_colors(len(self.model.agents)))}
@@ -39,62 +48,47 @@ class View(object):
         self.on_quit = None
         self.on_frame = None
         self.pressed_keys = pygame.key.get_pressed()
-        self.render_steps: typing.List[typing.Callable[[pygame.Surface, CoordinateConverter], None]] = []
+        self.draw = self.render
 
     def add_render_step(self,
-                        render_step: typing.Callable[[pygame.Surface, CoordinateConverter], None]):
+                        render_step: typing.Callable[[pygame.Surface, CoordinateConverter], None],
+                        z_index: int = -1):
         self.render_steps.append(render_step)
+        self.render_steps_z_index.append(z_index)
+        self.render_steps_sequence = [i for i, z in
+                                      sorted([(i, math.inf if z == -1 else z)
+                                             for i, z
+                                             in enumerate(self.render_steps_z_index)],
+                                             key=lambda item: item[1])]
 
-    def draw_polygon(self, polygon, color):
-        """Draws a hexagon at the specified position and size."""
-        pygame.draw.polygon(self.screen,
-                            color,
-                            [self.coordinate_converter.from_canonical(point) for point in polygon.exterior.coords])
+    def render_occlusions(self, surface, coordinate_converter):
+        for occlusion in self.model.occlusions:
+            pygame.draw.polygon(surface,
+                                self.occlusion_color,
+                                [coordinate_converter.from_canonical(point) for point in occlusion.exterior.coords])
 
-    def draw_polygon_vertices(self, polygon, color, size=2):
-        """Draws a hexagon at the specified position and size."""
-        for point in polygon.exterior.coords:
-            pygame.draw.circle(surface=self.screen,
-                               color=color,
-                               center=self.coordinate_converter.from_canonical(point),
-                               radius=size,
-                               width=2)
+    def render_arena(self, surface, coordinate_converter):
+        pygame.draw.polygon(surface,
+                            self.arena_color,
+                            [coordinate_converter.from_canonical(point) for point in self.model.arena.exterior.coords])
 
-    def draw_points(self, points, color, size=2):
-        """Draws a hexagon at the specified position and size."""
-        for point in points:
-            pygame.draw.circle(surface=self.screen,
-                               color=color,
-                               center=self.coordinate_converter.from_canonical((point.x, point.y)),
-                               radius=size,
-                               width=2)
-
-    def draw(self):
-        self.screen.fill((0, 0, 0))
-        self.draw_polygon(self.model.arena, self.arena_color)
-
+    def render_visibility(self, surface, coordinate_converter):
         if self.agent_perspective != -1:
             agent_name = list(self.model.agents.keys())[self.agent_perspective]
             visibility_perspective = self.model.agents[agent_name].state
             visibility_polygon, a = self.visibility.get_visibility_polygon(location=visibility_perspective.location,
                                                                            direction=visibility_perspective.direction,
                                                                            view_field=360)
-            self.draw_polygon(visibility_polygon, (180, 180, 180))
+            pygame.draw.polygon(surface,
+                                self.visibility_color,
+                                [coordinate_converter.from_canonical(point) for point in
+                                 visibility_polygon.exterior.coords])
 
-        for occlusion in self.model.occlusions:
-            self.draw_polygon(occlusion, self.occlusion_color)
-
-        for (name, agent), color in zip(self.model.agents.items(), self.agent_colors):
-            if agent.visible:
-                if self.show_sprites:
-                    agent.draw(surface=self.screen,
-                               coordinate_converter=self.coordinate_converter)
-                else:
-                    self.draw_polygon(self.model.agents[name].get_polygon(), color=self.agent_colors[name])
-
-        for render_step in self.render_steps:
+    def render(self):
+        self.screen.fill(self.background_color)
+        for render_step_number in self.render_steps_sequence:
+            render_step = self.render_steps[render_step_number]
             render_step(self.screen, self.coordinate_converter)
-
         self.__process_events__()
         if self.on_frame:
             self.on_frame(self.screen, self.coordinate_converter)

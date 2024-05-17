@@ -39,8 +39,8 @@ class Visibility:
         return None
 
     def line_of_sight(self,
-                      src: typing.Union[sp.Point,typing.Tuple[float, float]],
-                      dst: typing.Union[sp.Point,typing.Tuple[float, float]],
+                      src: typing.Union[sp.Point, typing.Tuple[float, float]],
+                      dst: typing.Union[sp.Point, typing.Tuple[float, float]],
                       walls_by_distance=None) -> bool:
         if isinstance(src, tuple):
             src = sp.Point(*src)

@@ -31,6 +31,6 @@ while True:
     time_starts = time.time()
     # ray_tracing.render(perspective=prey.state,
     #                    screen=screen)
-    view.draw()
+    view.render()
     model.step()
     print(1/(time.time() - time_starts))

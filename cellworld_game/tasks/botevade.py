@@ -74,7 +74,7 @@ class BotEvade(Model):
                                        radius=puff_area_size,
                                        width=2)
 
-                self.view.add_render_step(render_puff_area)
+                self.view.add_render_step(render_puff_area, z_index=90)
 
         self.puffed: bool = False
         self.puff_cool_down: float = 0
@@ -125,6 +125,6 @@ class BotEvade(Model):
     def step(self) -> float:
         delta_t = Model.step(self)
         if self.render:
-            self.view.draw()
+            self.view.render()
         self.__update_state__(delta_t=delta_t)
         return delta_t
