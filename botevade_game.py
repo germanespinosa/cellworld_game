@@ -10,13 +10,14 @@ bot_evade = BotEvade(world_name="21_05",
                      render=True,
                      use_predator=True)
 
+bot_evade.view.agent_perspective = 0
 
 bot_evade.reset()
 
 # prey
 puff_cool_down = 0
 last_destination_time = -3
-random_actions = 5
+random_actions = 50
 
 action_count = len(bot_evade.loader.full_action_list)
 
@@ -24,7 +25,7 @@ while bot_evade.running:
     if bot_evade.time > last_destination_time + 2:
         if bot_evade.goal_achieved or random_actions == 0:
             destination = bot_evade.goal_location
-            random_actions = 5
+            random_actions = 50
         else:
             random_actions -= 1
             destination = random.choice(bot_evade.loader.open_locations)

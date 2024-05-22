@@ -2,7 +2,7 @@ import math
 import pygame
 import typing
 from .model import Model
-from .agent import CoordinateConverter
+from .coordinate_converter import CoordinateConverter
 from .util import generate_distinct_colors
 
 
@@ -40,7 +40,7 @@ class View(object):
         self.agent_perspective = -1
         self.show_sprites = True
         self.target = None
-        self.on_mouse_button_down = None
+        self.on_mouse_button_down = self.on_mouse_down_event
         self.on_mouse_button_up = None
         self.on_mouse_move = None
         self.on_mouse_wheel = None
@@ -49,6 +49,10 @@ class View(object):
         self.on_frame = None
         self.pressed_keys = pygame.key.get_pressed()
         self.draw = self.render
+        self.visibility_location = (.5, .5)
+
+    def on_mouse_down_event(self, event, location):
+        self.visibility_location = location
 
     def add_render_step(self,
                         render_step: typing.Callable[[pygame.Surface, CoordinateConverter], None],
@@ -76,13 +80,12 @@ class View(object):
         if self.agent_perspective != -1:
             agent_name = list(self.model.agents.keys())[self.agent_perspective]
             visibility_perspective = self.model.agents[agent_name].state
-            visibility_polygon, a = self.visibility.get_visibility_polygon(location=visibility_perspective.location,
-                                                                           direction=visibility_perspective.direction,
-                                                                           view_field=360)
-            pygame.draw.polygon(surface,
-                                self.visibility_color,
-                                [coordinate_converter.from_canonical(point) for point in
-                                 visibility_polygon.exterior.coords])
+            self.visibility.render(surface=surface,
+                                   coordinate_converter=coordinate_converter,
+                                   location=visibility_perspective.location,
+                                   direction=visibility_perspective.direction,
+                                   view_field=360,
+                                   color=self.visibility_color)
 
     def render(self):
         self.screen.fill(self.background_color)
@@ -134,3 +137,5 @@ class View(object):
             self.show_sprites = False
         if key == pygame.K_4:
             self.show_sprites = True
+        if key == pygame.K_p:
+            self.model.pause()

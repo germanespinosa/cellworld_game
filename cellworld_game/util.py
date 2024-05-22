@@ -171,6 +171,7 @@ def polygons_to_sides(polygons):
     return sides, sides_centroids, vertices, filtered_sides_vertices
 
 
+
 from itertools import combinations
 
 

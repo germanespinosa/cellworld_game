@@ -1,7 +1,8 @@
 import pulsekit
 import pygame
 from .util import distance, direction, direction_difference, direction_error_normalization
-from .agent import Agent, CoordinateConverter
+from .agent import Agent
+from .coordinate_converter import CoordinateConverter
 from .navigation import Navigation
 
 

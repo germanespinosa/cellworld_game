@@ -33,6 +33,7 @@ class Model(object):
         self.before_reset = None
         self.after_reset = None
         self.on_close = None
+        self.paused = False
 
     def set_agents_state(self, agents_state: typing.Dict[str, AgentState],
                          delta_t: float = 0):
@@ -44,6 +45,9 @@ class Model(object):
     def __update_state__(self,
                          delta_t: float = 0):
         pass
+
+    def pause(self):
+        self.paused = not self.paused
 
     def add_agent(self, name: str, agent: Agent):
         self.agents[name] = agent
@@ -91,21 +95,13 @@ class Model(object):
         observations = {}
         for src_name, src_agent in self.agents.items():
             observations[src_name] = {}
-            src_point = sp.Point(src_agent.state.location)
-            walls_by_distance = self.visibility.walls_by_distance(src=src_point)
-            parsed_walls = []
-            for wall_number, vertices, distance in walls_by_distance:
-                parsed_walls.append((distance, self.wall_direction(src=src_point, wall_number=wall_number)))
-            observations[src_name]["walls"] = parsed_walls
             for dst_name, dst_agent in self.agents.items():
                 if agent_visibility[src_name][dst_name] is None:
                     if src_name == dst_name:
                         is_visible = True
                     else:
-                        dst_point = sp.Point(dst_agent.state.location)
-                        is_visible = self.visibility.line_of_sight(src=src_point,
-                                                                   dst=dst_point,
-                                                                   walls_by_distance=walls_by_distance)
+                        is_visible = self.visibility.line_of_sight(src=src_agent.state.location,
+                                                                   dst=dst_agent.state.location)
                     agent_visibility[src_name][dst_name] = is_visible
                     agent_visibility[dst_name][src_name] = is_visible
             observations[src_name]["agent_states"] = {}
@@ -150,6 +146,9 @@ class Model(object):
 
     def step(self) -> float:
         if not self.running:
+            return 0
+
+        if self.paused:
             return 0
 
         with pulsekit.CodeBlock("model.before_step"):

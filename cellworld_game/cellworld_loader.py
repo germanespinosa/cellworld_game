@@ -42,6 +42,8 @@ class CellWorldLoader:
                                                           world_name,
                                                           "spawn_locations")
         self.robot_start_locations = [tuple(self.world.cells[sc].location.get_values()) for sc in spawn_cells]
+        if not self.robot_start_locations:
+            self.robot_start_locations = [(.5, .5)]
         self.full_action_list = self.open_locations
 
         try:
