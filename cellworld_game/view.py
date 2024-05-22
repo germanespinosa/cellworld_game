@@ -84,7 +84,7 @@ class View(object):
                                    coordinate_converter=coordinate_converter,
                                    location=visibility_perspective.location,
                                    direction=visibility_perspective.direction,
-                                   view_field=360,
+                                   view_field=270,
                                    color=self.visibility_color)
 
     def render(self):

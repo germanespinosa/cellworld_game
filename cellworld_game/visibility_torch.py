@@ -200,7 +200,14 @@ class Visibility:
 
             rays = torch.cat((torch.tensor([lb, ub], device=self.device), filtered_thetas), dim=0)
 
-        intersections = self.get_intersections(angles=rays,
+        ordered_rays, rays_indices = torch.sort(rays)
+
+        if view_field < 360:
+            # saves_the_index of the lower and upper bound ray indices
+            lower_bound_index = torch.nonzero((rays_indices == 0), as_tuple=True)[0]
+            upper_bound_index = torch.nonzero((rays_indices == 1), as_tuple=True)[0]
+
+        intersections = self.get_intersections(angles=ordered_rays,
                                                segments=segments_vertices_angles)
 
         segments_distances = segments_distances.expand_as(intersections)
@@ -211,11 +218,28 @@ class Visibility:
 
         closest_intersected_walls = torch.argmin(intersected_walls_distances, dim=1)
 
-        xy_v1 = segments_vertices_points[closest_intersected_walls, 0, :]
-        xy_v2 = segments_vertices_points[closest_intersected_walls, 1, :]
+        # filters unnecessary vertices
+        non_colinear = torch.zeros_like(closest_intersected_walls, dtype=torch.bool)
+        # Set the first and last elements to True
+        non_colinear[0] = True
+        non_colinear[-1] = True
+        # Compare each element with its previous and next neighbors
+        non_colinear[1:-1] = (closest_intersected_walls[1:-1] != closest_intersected_walls[:-2]) | (closest_intersected_walls[1:-1] != closest_intersected_walls[2:])
 
-        direction_x = torch.cos(rays)
-        direction_y = torch.sin(rays)
+        if view_field < 360:
+            # do not filter the bounds rays
+            non_colinear[lower_bound_index] = True
+            non_colinear[upper_bound_index] = True
+
+        filtered_intersected_walls = closest_intersected_walls[non_colinear]
+        filtered_rays = ordered_rays[non_colinear]
+        filtered_rays_indices = rays_indices[non_colinear]
+
+        xy_v1 = segments_vertices_points[filtered_intersected_walls, 0, :]
+        xy_v2 = segments_vertices_points[filtered_intersected_walls, 1, :]
+
+        direction_x = torch.cos(filtered_rays)
+        direction_y = torch.sin(filtered_rays)
 
         Q0_x, Q0_y, Q1_x, Q1_y = xy_v1[:, 0], xy_v1[:, 1], xy_v2[:, 0], xy_v2[:, 1]
 
@@ -235,11 +259,11 @@ class Visibility:
 
         # Combine the angle and intersection points into a single tensor
 
-        ordered_angles = torch.argsort(rays).to(self.device)
-        result = torch.stack([intersection_x, intersection_y], dim=1).to(self.device)[ordered_angles]
+        result = torch.stack([intersection_x, intersection_y], dim=1).to(self.device)
 
         if view_field < 360:
-            index = torch.nonzero((ordered_angles == 0), as_tuple=True)[0]
+            # adds a vertex on the source location
+            index = torch.nonzero((filtered_rays_indices == 0), as_tuple=True)[0]
             result = torch.cat([result[:index, :], src_tensor.unsqueeze(0), result[index:, :]], dim=0)
         return sp.Polygon(result.cpu())
 
