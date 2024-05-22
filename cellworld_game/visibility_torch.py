@@ -183,7 +183,7 @@ class Visibility:
         segments_vertices_angles = torch.cat((occlusions_segments_angles, walls_segments_angles), dim=0)
         segments_vertices_points = torch.cat((occlusions_segments_points, walls_segments_points), dim=0)
         segments_distances = torch.cat((occlusions_distances, walls_distances), dim=0)
-        rays = torch.cat((vertices_angles - .01, vertices_angles, vertices_angles + .01), dim=0)
+        rays = torch.cat((vertices_angles - .001, vertices_angles, vertices_angles + .001), dim=0)
 
         if view_field < 360:
             d = math.radians(view_field) / 2
@@ -265,7 +265,7 @@ class Visibility:
             # adds a vertex on the source location
             index = torch.nonzero((filtered_rays_indices == 0), as_tuple=True)[0]
             result = torch.cat([result[:index, :], src_tensor.unsqueeze(0), result[index:, :]], dim=0)
-        return sp.Polygon(result.cpu())
+        return result.cpu()
 
     def render(self,
                surface,
@@ -277,14 +277,15 @@ class Visibility:
 
         import pygame
 
-        visibility_polygon = self.get_visibility_polygon(src=location,
-                                                         direction=direction,
-                                                         view_field=view_field)
+        visibility_polygon_vertices = self.get_visibility_polygon(src=location,
+                                                                  direction=direction,
+                                                                  view_field=view_field)
 
         pygame.draw.polygon(surface,
                             color,
-                            [coordinate_converter.from_canonical(point) for point in
-                             visibility_polygon.exterior.coords])
+                            [coordinate_converter.from_canonical((float(point_x), float(point_y)))
+                             for point_x, point_y
+                             in visibility_polygon_vertices])
 
         pygame.draw.circle(surface=surface,
                            color=(0, 0, 255),

@@ -1,4 +1,3 @@
-import math
 import typing
 import pygame
 import shapely as sp
@@ -44,7 +43,7 @@ class AgentDynamics(object):
 class Agent(object):
 
     def __init__(self,
-                 view_field: float = 180,
+                 view_field: float = 360,
                  collision: bool = True):
         self.visible = True
         self.view_field = view_field

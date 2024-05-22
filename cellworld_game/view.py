@@ -29,9 +29,9 @@ class View(object):
             agent.set_coordinate_converter(self.coordinate_converter)
             self.add_render_step(agent.render, z_index=100)
         self.screen = pygame.display.set_mode(self.coordinate_converter.screen_size)
-        self.arena_color = (255, 255, 255)
+        self.arena_color = (210, 210, 210)
         self.occlusion_color = (50, 50, 50)
-        self.visibility_color = (180, 180, 180)
+        self.visibility_color = (255, 255, 255)
         self.background_color = (0, 0, 0)
         self.agent_colors = {agent_name: color for agent_name, color
                              in zip(self.model.agents.keys(),
@@ -79,12 +79,11 @@ class View(object):
     def render_visibility(self, surface, coordinate_converter):
         if self.agent_perspective != -1:
             agent_name = list(self.model.agents.keys())[self.agent_perspective]
-            visibility_perspective = self.model.agents[agent_name].state
             self.visibility.render(surface=surface,
                                    coordinate_converter=coordinate_converter,
-                                   location=visibility_perspective.location,
-                                   direction=visibility_perspective.direction,
-                                   view_field=270,
+                                   location=self.model.agents[agent_name].state.location,
+                                   direction=self.model.agents[agent_name].state.direction,
+                                   view_field=self.model.agents[agent_name].view_field,
                                    color=self.visibility_color)
 
     def render(self):

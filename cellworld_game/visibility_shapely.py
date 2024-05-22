@@ -205,7 +205,7 @@ class Visibility:
                     final_vertices.append(ext2)
                 final_vertices.append(vertex)
                 last_vertex_number, last_theta = vertex_number, theta
-        return sp.Polygon(final_vertices)
+        return final_vertices
 
     def render(self,
                surface,
@@ -217,14 +217,15 @@ class Visibility:
 
         import pygame
 
-        visibility_polygon = self.get_visibility_polygon(src=location,
-                                                         direction=direction,
-                                                         view_field=view_field)
+        visibility_polygon_vertices = self.get_visibility_polygon(src=location,
+                                                                  direction=direction,
+                                                                  view_field=view_field)
 
         pygame.draw.polygon(surface,
                             color,
-                            [coordinate_converter.from_canonical(point) for point in
-                             visibility_polygon.exterior.coords])
+                            [coordinate_converter.from_canonical((point.x, point.y))
+                             for point
+                             in visibility_polygon_vertices])
 
         pygame.draw.circle(surface=surface,
                            color=(0, 0, 255),
