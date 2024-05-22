@@ -33,6 +33,7 @@ class Model(object):
         self.before_reset = None
         self.after_reset = None
         self.on_close = None
+        self.view: typing.Optional["View"] = None
         self.paused = False
 
     def set_agents_state(self, agents_state: typing.Dict[str, AgentState],
@@ -72,6 +73,8 @@ class Model(object):
             self.after_reset()
 
     def stop(self):
+        if not self.running:
+            return
         if self.before_stop is not None:
             self.before_stop()
         self.running = False
