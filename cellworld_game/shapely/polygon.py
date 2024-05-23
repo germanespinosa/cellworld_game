@@ -1,6 +1,6 @@
 import typing
 from ..interfaces import IPolygon
-from shapely.affinity import rotate, translate
+import shapely.affinity as spa
 import shapely as sp
 
 
@@ -52,10 +52,10 @@ class Polygon(IPolygon):
                          rotation: float,
                          rotation_center: typing.Tuple[float, float] = (0, 0)) -> "Polygon":
         delta_x, delta_y = translation
-        rotated_polygon = sp.affinity.rotate(self.polygon,
-                                             rotation,
-                                             origin=rotation_center,
-                                             use_radians=False)
-        translated_polygon: sp.Polygon = sp.affinity.translate(rotated_polygon, delta_x, delta_y)
+        rotated_polygon = spa.rotate(self.polygon,
+                                     rotation,
+                                     origin=rotation_center,
+                                     use_radians=False)
+        translated_polygon: spa.Polygon = spa.translate(rotated_polygon, delta_x, delta_y)
 
         return Polygon(vertices=translated_polygon.exterior.coords)

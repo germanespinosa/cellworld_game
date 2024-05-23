@@ -1,8 +1,6 @@
-import importlib.util
+from .lib import is_torch_available
 
-module_spec = importlib.util.find_spec("torch")
-
-if module_spec is not None:
-    from .visibility_torch import Visibility
+if is_torch_available():
+    from .torch import Visibility
 else:
-    from .visibility_shapely import Visibility
+    from .shapely import Visibility

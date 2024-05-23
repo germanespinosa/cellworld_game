@@ -2,61 +2,22 @@ import torch
 import math
 import typing
 import shapely as sp
-from .util import polygons_to_sides
-from .coordinate_converter import CoordinateConverter
-
-
-def normalize_angle(angle):
-    """Normalize angles to be within the range [-pi, pi]"""
-    return (angle + torch.pi) % (2 * torch.pi) - torch.pi
+from .geometry import polygons_to_sides, normalize_angle
+from ..coordinate_converter import CoordinateConverter
+from .device import default_device
 
 
 class Visibility:
     def __init__(self, arena: sp.Polygon, occlusions: typing.List[sp.Polygon]):
-
-        if torch.cuda.is_available():
-            self.device = torch.device("cuda")  # Set device to GPU
-            print("GPU is available")
-        else:
-            self.device = torch.device("cpu")  # Set device to CPU
-            print("GPU is not available, using CPU instead")
-
-        # occlussions tensors
-
-        _, occlusions_sides_centroids, occlusion_vertices, occlusion_sides_vertices = polygons_to_sides(occlusions)
-
-        self.occlusion_vertices = torch.tensor([[vertex.x, vertex.y]
-                                                for vertex in occlusion_vertices],
-                                               device=self.device)
-
-        self.occlusions_centroids = torch.tensor([[centroid.x, centroid.y]
-                                                  for centroid in occlusions_sides_centroids],
-                                                 device=self.device)
-
-        self.occlusions_vertices_indices = torch.tensor(occlusion_sides_vertices,
-                                                        device=self.device)
-
-        # arena walls tensors
-
-        _, wall_sides_centroids, wall_vertices, wall_sides_vertices = polygons_to_sides([arena])
-
-        self.wall_vertices = torch.tensor([[vertex.x, vertex.y]
-                                           for vertex in wall_vertices],
-                                          device=self.device)
-
-        self.walls_centroids = torch.tensor([[centroid.x, centroid.y]
-                                             for centroid in wall_sides_centroids],
-                                            device=self.device)
-
-        self.walls_vertices_indices = torch.tensor(wall_sides_vertices,
-                                                   device=self.device)
+        self.occlusion_vertices, self.occlusions_centroids, self.occlusions_vertices_indices = polygons_to_sides(occlusions)
+        self.wall_vertices, self.walls_centroids, self.walls_vertices_indices = polygons_to_sides([arena])
 
     def get_points_angles(self,
                           src_tensor: torch.tensor,
                           locations: torch.tensor):
         if locations.numel() == 0:
-            return torch.tensor([], device=self.device)
-        diff = (locations - src_tensor).to(self.device)
+            return torch.tensor([], device=default_device)
+        diff = (locations - src_tensor).to(default_device)
         vertices_angles = torch.atan2(diff[:, 1], diff[:, 0])
         return vertices_angles
 
@@ -64,8 +25,8 @@ class Visibility:
                              src_tensor: torch.tensor,
                              locations: torch.tensor):
         if locations.numel() == 0:
-            return torch.tensor([], device=self.device)
-        distances = torch.sum((locations - src_tensor) ** 2, dim=1).to(self.device)
+            return torch.tensor([], device=default_device)
+        distances = torch.sum((locations - src_tensor) ** 2, dim=1).to(default_device)
         return distances
 
     @staticmethod
@@ -102,8 +63,8 @@ class Visibility:
                       src: typing.Union[typing.Tuple[float, float]],
                       dst: typing.Union[typing.Tuple[float, float]]) -> bool:
 
-        src_tensor = torch.tensor(src, device=self.device)
-        dst_tensor = torch.tensor(dst, device=self.device)
+        src_tensor = torch.tensor(src, device=default_device)
+        dst_tensor = torch.tensor(dst, device=default_device)
 
         occlusions_vertices_angles = self.get_points_angles(src_tensor=src_tensor,
                                                             locations=self.occlusion_vertices)
@@ -134,17 +95,17 @@ class Visibility:
                                          vertices_angles: torch.tensor,
                                          segments: torch.tensor):
         if segments.numel() == 0:
-            return torch.tensor([], device=self.device)
+            return torch.tensor([], device=default_device)
         return torch.stack([normalize_angle((vertices_angles[segments[:, 0]])),
-                            normalize_angle((vertices_angles[segments[:, 1]]))], dim=1).to(self.device)
+                            normalize_angle((vertices_angles[segments[:, 1]]))], dim=1).to(default_device)
 
     def __get_segments_vertices_points__(self,
                                          vertices_points: torch.tensor,
                                          segments: torch.tensor):
         if segments.numel() == 0:
-            return torch.tensor([], device=self.device)
+            return torch.tensor([], device=default_device)
         return torch.stack([vertices_points[segments[:, 0]],
-                            vertices_points[segments[:, 1]]], dim=1).to(self.device)
+                            vertices_points[segments[:, 1]]], dim=1).to(default_device)
 
     def get_visibility_polygon(self,
                                src: typing.Tuple[float, float],
@@ -153,7 +114,7 @@ class Visibility:
 
         theta = math.radians((direction + 180) % 360) - math.pi
 
-        src_tensor = torch.tensor(src, device=self.device)
+        src_tensor = torch.tensor(src, device=default_device)
 
         occlusions_vertices_angles = self.get_points_angles(src_tensor=src_tensor,
                                                             locations=self.occlusion_vertices)
@@ -198,7 +159,7 @@ class Visibility:
             else:
                 filtered_thetas = rays[(rays > lb) & (rays < ub)]
 
-            rays = torch.cat((torch.tensor([lb, ub], device=self.device), filtered_thetas), dim=0)
+            rays = torch.cat((torch.tensor([lb, ub], device=default_device), filtered_thetas), dim=0)
 
         ordered_rays, rays_indices = torch.sort(rays)
 
@@ -214,7 +175,7 @@ class Visibility:
 
         intersected_walls_distances = torch.where(intersections,
                                                   segments_distances,
-                                                  math.inf).to(self.device)
+                                                  math.inf).to(default_device)
 
         closest_intersected_walls = torch.argmin(intersected_walls_distances, dim=1)
 
@@ -259,7 +220,7 @@ class Visibility:
 
         # Combine the angle and intersection points into a single tensor
 
-        result = torch.stack([intersection_x, intersection_y], dim=1).to(self.device)
+        result = torch.stack([intersection_x, intersection_y], dim=1).to(default_device)
 
         if view_field < 360:
             # adds a vertex on the source location

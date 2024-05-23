@@ -2,9 +2,9 @@ import bisect
 import math
 import typing
 import shapely as sp
-from .util import polygons_to_sides, theta_in_between
-from .geometry import distance2, move, atan2
-from .coordinate_converter import CoordinateConverter
+from ..util import polygons_to_sides, theta_in_between
+from ..geometry import distance2, move, atan2
+from ..coordinate_converter import CoordinateConverter
 
 
 class Visibility:
