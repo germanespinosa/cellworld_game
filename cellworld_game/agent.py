@@ -118,7 +118,7 @@ class Agent(object):
         dist = 0
         prev_state = self.trajectory[0]
         for state in self.trajectory[1:]:
-            dist += distance(prev_state.location, state.location)
+            dist += Point.distance(src=prev_state.location, dst=state.location)
             prev_state = state
         stats["distance"] = dist
         return stats
