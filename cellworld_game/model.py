@@ -1,11 +1,9 @@
 import pulsekit
-import math
 import time
 import typing
 import shapely as sp
 from .agent import Agent, AgentState
 from .visibility import Visibility
-from .geometry import atan2
 
 
 class Model(object):
@@ -89,9 +87,6 @@ class Model(object):
                 if agent_polygon.intersects(occlusion):
                     return False
         return True
-
-    def wall_direction(self, src: typing.Tuple[float, float], wall_number: int):
-        return math.degrees(atan2(sp.Point(src), self.visibility.walls_centroids[wall_number]))
 
     def get_observations(self):
         agent_visibility = {src_name: {dst_name: None for dst_name in self.agents} for src_name in self.agents}

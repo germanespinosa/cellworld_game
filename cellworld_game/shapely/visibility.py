@@ -3,7 +3,7 @@ import math
 import typing
 import shapely as sp
 from ..util import theta_in_between
-from ..geometry import distance2, move, atan2
+from .geometry import distance2, move, atan2
 from ..coordinate_converter import CoordinateConverter
 from .geometry import polygons_to_sides
 
