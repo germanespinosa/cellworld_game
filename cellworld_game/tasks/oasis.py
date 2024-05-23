@@ -1,7 +1,7 @@
 import random
 import typing
 
-from ..util import distance
+from ..util import Point
 from ..model import Model
 from ..agent import AgentState, CoordinateConverter
 from ..mouse import Mouse
@@ -112,8 +112,8 @@ class Oasis(Model):
     def __update_state__(self,
                          delta_t: float = 0):
         if self.use_predator and self.puff_cool_down <= 0:
-            self.predator_prey_distance = distance(self.prey.state.location,
-                                                   self.predator.state.location)
+            self.predator_prey_distance = Point.distance(self.prey.state.location,
+                                                         self.predator.state.location)
             if self.visibility.line_of_sight(self.prey.state.location, self.predator.state.location):
                 if self.predator_prey_distance <= self.puff_threshold:
                     self.puffed = True
@@ -130,7 +130,7 @@ class Oasis(Model):
         else:
             self.puff_cool_down = 0
 
-        self.prey_goal_distance = distance(self.goal_location, self.prey.state.location)
+        self.prey_goal_distance = Point.distance(self.goal_location, self.prey.state.location)
 
         if self.prey_goal_distance <= self.goal_threshold:
             self.goal_achieved_time += delta_t

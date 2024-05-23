@@ -1,6 +1,6 @@
 import pulsekit
 import pygame
-from .util import distance, direction, direction_difference, direction_error_normalization
+from .util import Point, Direction
 from .agent import Agent
 from .coordinate_converter import CoordinateConverter
 from .navigation import Navigation
@@ -66,22 +66,22 @@ class NavigationAgent(Agent):
                 self.navigation_plan_update_wait -= 1
 
             if self.next_step() is not None:
-                distance_error = distance(src=self.state.location,
-                                          dst=self.next_step())
+                distance_error = Point.distance(src=self.state.location,
+                                                dst=self.next_step())
                 if distance_error < self.threshold:
                     self.path.pop(0)
 
             if self.next_step():
-                distance_error = distance(src=self.state.location,
-                                          dst=self.next_step())
+                distance_error = Point.distance(src=self.state.location,
+                                                dst=self.next_step())
 
                 normalized_distance_error = max(distance_error/.2, 1)
 
-                destination_direction = direction(src=self.state.location,
-                                                  dst=self.next_step())
-                direction_error = direction_difference(direction1=self.state.direction,
+                destination_direction = Direction.to(src=self.state.location,
+                                                     dst=self.next_step())
+                direction_error = Direction.difference(direction1=self.state.direction,
                                                        direction2=destination_direction)
-                normalized_direction_error = direction_error_normalization(direction_error=direction_error)
+                normalized_direction_error = Direction.error_normalization(direction_error=direction_error)
 
                 self.dynamics.forward_speed = self.max_forward_speed * normalized_direction_error * normalized_distance_error
                 self.dynamics.turn_speed = self.max_turning_speed * direction_error

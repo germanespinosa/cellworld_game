@@ -2,9 +2,9 @@ import pygame
 import math
 import typing
 import shapely as sp
-from .model import Model
-from .agent import AgentState
-from .util import create_line_string
+from cellworld_game.model import Model
+from cellworld_game.agent import AgentState
+from cellworld_game.util import create_line_string
 
 
 class RayTracing:

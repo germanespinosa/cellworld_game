@@ -1,6 +1,11 @@
 import shapely as sp
 import math
 
+def theta_in_between(theta, start, end):
+    if end > start:
+        return start < theta < end
+    return theta > start or theta < end
+
 
 def distance2(point1: sp.Point, point2: sp.Point):
     return (point2.x - point1.x) ** 2 + (point2.y - point1.y) ** 2

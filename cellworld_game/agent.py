@@ -1,7 +1,7 @@
 import typing
 import pygame
 from .resources import Resources
-from .util import move_point, distance
+from .util import Point
 from .coordinate_converter import CoordinateConverter
 from .polygon import Polygon
 
@@ -19,7 +19,7 @@ class AgentState(object):
                distance: float,
                rotation: float) -> "AgentState":
         new_direction = self.direction + rotation
-        return AgentState(location=move_point(start=self.location,
+        return AgentState(location=Point.move(start=self.location,
                                               direction=new_direction,
                                               distance=distance),
                           direction=new_direction)

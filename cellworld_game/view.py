@@ -3,8 +3,21 @@ import pygame
 import typing
 from .model import Model
 from .coordinate_converter import CoordinateConverter
-from .util import generate_distinct_colors
+import colorsys
 
+
+def generate_distinct_colors(n):
+    colors = []
+    for i in range(n):
+        hue = i / n  # Evenly distribute hues in the [0, 1) interval
+        saturation = 0.7  # Choose a saturation level that avoids white and grays
+        lightness = 0.5  # Choose a lightness level that avoids black and white
+        rgb = colorsys.hls_to_rgb(hue, lightness, saturation)
+        # Convert the RGB values from [0, 1] to [0, 255] and round them to integers
+        rgb = tuple(round(c * 255) for c in rgb)
+        colors.append(rgb)
+
+    return colors
 
 class View(object):
     def __init__(self,

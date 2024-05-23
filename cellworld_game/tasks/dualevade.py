@@ -1,5 +1,5 @@
 import random
-from ..util import distance
+from ..util import Point
 from ..model import Model
 from ..agent import AgentState, CoordinateConverter
 from ..mouse import Mouse
@@ -106,8 +106,8 @@ class DualEvade(Model):
                          delta_t: float = 0):
         self.mouse_visible = self.visibility.line_of_sight(self.prey_1.state.location, self.prey_2.state.location)
         if self.use_predator and self.puff_cool_down <= 0:
-            self.prey_data_1.predator_prey_distance = distance(self.prey_1.state.location,
-                                                               self.predator.state.location)
+            self.prey_data_1.predator_prey_distance = Point.distance(self.prey_1.state.location,
+                                                                     self.predator.state.location)
             self.prey_data_1.predator_visible = self.prey_1.visible and self.visibility.line_of_sight(self.prey_1.state.location, self.predator.state.location)
             if self.prey_data_1.predator_visible:
                 if self.prey_data_1.predator_prey_distance <= self.puff_threshold:
@@ -115,8 +115,8 @@ class DualEvade(Model):
                     self.prey_data_1.puff_count += 1
                     self.puff_cool_down = self.puff_cool_down_time
 
-            self.prey_data_2.predator_prey_distance = distance(self.prey_2.state.location,
-                                                               self.predator.state.location)
+            self.prey_data_2.predator_prey_distance = Point.distance(self.prey_2.state.location,
+                                                                     self.predator.state.location)
 
             self.prey_data_2.predator_visible = self.prey_2.visible and self.visibility.line_of_sight(self.prey_2.state.location, self.predator.state.location)
             if self.prey_data_2.predator_visible:
@@ -147,12 +147,14 @@ class DualEvade(Model):
         else:
             self.puff_cool_down = 0
 
-        self.prey_data_1.prey_goal_distance = distance(self.goal_location, self.prey_1.state.location)
+        self.prey_data_1.prey_goal_distance = Point.distance(src=self.goal_location,
+                                                             dst=self.prey_1.state.location)
         if self.prey_data_1.prey_goal_distance <= self.goal_threshold:
             self.prey_data_1.goal_achieved = True
             self.prey_1.visible = False
 
-        self.prey_data_2.prey_goal_distance = distance(self.goal_location, self.prey_2.state.location)
+        self.prey_data_2.prey_goal_distance = Point.distance(src=self.goal_location,
+                                                             dst=self.prey_2.state.location)
         if self.prey_data_2.prey_goal_distance <= self.goal_threshold:
             self.prey_data_2.goal_achieved = True
             self.prey_2.visible = False

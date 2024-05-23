@@ -4,9 +4,8 @@ from .agent import Agent, AgentDynamics, AgentState, CoordinateConverter
 from .resources import Resources
 from .robot import Robot
 from .mouse import Mouse
-from .ray_tracing import RayTracing
 from .navigation import Navigation
-from .util import distance, direction
+from .util import Point, Direction
 from .cellworld_loader import CellWorldLoader
 from .visibility import Visibility
 from .tasks import BotEvade, Oasis, DualEvade
