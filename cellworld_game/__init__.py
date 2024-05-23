@@ -11,3 +11,4 @@ from .cellworld_loader import CellWorldLoader
 from .visibility import Visibility
 from .tasks import BotEvade, Oasis, DualEvade
 from .video import save_video_output
+from .polygon import Polygon
