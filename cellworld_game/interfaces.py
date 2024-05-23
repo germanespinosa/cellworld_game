@@ -57,6 +57,19 @@ class IPolygon(ABC):
         # Create the regular polygon
         return cls(points)
 
+    def render(self,
+               surface,
+               coordinate_converter: CoordinateConverter,
+               color: typing.Tuple[int, int, int]):
+
+        import pygame
+
+        pygame.draw.polygon(surface,
+                            color,
+                            [coordinate_converter.from_canonical((float(point_x), float(point_y)))
+                             for point_x, point_y
+                             in self])
+
 
 class IVisibility(ABC):
 
@@ -80,4 +93,12 @@ class IVisibility(ABC):
                direction: float,
                view_field: float = 360,
                color: typing.Tuple[int, int, int] = (180, 180, 180)):
-        raise NotImplementedError
+
+        visibility_polygon = self.get_visibility_polygon(src=location,
+                                                         direction=direction,
+                                                         view_field=view_field)
+
+        visibility_polygon.render(surface=surface,
+                                  coordinate_converter=coordinate_converter,
+                                  color=color)
+

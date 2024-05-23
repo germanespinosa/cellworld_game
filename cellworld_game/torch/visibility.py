@@ -5,9 +5,11 @@ import shapely as sp
 from .geometry import polygons_to_sides, normalize_angle
 from ..coordinate_converter import CoordinateConverter
 from .device import default_device
+from .polygon import Polygon
+from ..interfaces import IVisibility
 
 
-class Visibility:
+class Visibility(IVisibility):
     def __init__(self, arena: sp.Polygon, occlusions: typing.List[sp.Polygon]):
         self.occlusion_vertices, self.occlusions_centroids, self.occlusions_vertices_indices = polygons_to_sides(occlusions)
         self.wall_vertices, self.walls_centroids, self.walls_vertices_indices = polygons_to_sides([arena])
@@ -226,30 +228,5 @@ class Visibility:
             # adds a vertex on the source location
             index = torch.nonzero((filtered_rays_indices == 0), as_tuple=True)[0]
             result = torch.cat([result[:index, :], src_tensor.unsqueeze(0), result[index:, :]], dim=0)
-        return result.cpu()
+        return Polygon(result)
 
-    def render(self,
-               surface,
-               coordinate_converter: CoordinateConverter,
-               location: typing.Tuple[float, float],
-               direction: float,
-               view_field: float = 360,
-               color: typing.Tuple[int, int, int] = (180, 180, 180)):
-
-        import pygame
-
-        visibility_polygon_vertices = self.get_visibility_polygon(src=location,
-                                                                  direction=direction,
-                                                                  view_field=view_field)
-
-        pygame.draw.polygon(surface,
-                            color,
-                            [coordinate_converter.from_canonical((float(point_x), float(point_y)))
-                             for point_x, point_y
-                             in visibility_polygon_vertices])
-
-        pygame.draw.circle(surface=surface,
-                           color=(0, 0, 255),
-                           center=coordinate_converter.from_canonical(location),
-                           radius=5,
-                           width=2)

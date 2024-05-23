@@ -6,9 +6,10 @@ from ..util import theta_in_between
 from .geometry import distance2, move, atan2
 from ..coordinate_converter import CoordinateConverter
 from .geometry import polygons_to_sides
+from .polygon import Polygon
+from ..interfaces import IVisibility
 
-
-class Visibility:
+class Visibility(IVisibility):
     def __init__(self, arena: sp.Polygon, occlusions: typing.List[sp.Polygon]):
         self.walls, self.walls_centroids, self.vertices, self.walls_vertices = polygons_to_sides(occlusions + [arena])
         arena_vertices = [sp.Point(c) for c in arena[1:]]
@@ -206,30 +207,5 @@ class Visibility:
                     final_vertices.append(ext2)
                 final_vertices.append(vertex)
                 last_vertex_number, last_theta = vertex_number, theta
-        return final_vertices
+        return Polygon(final_vertices)
 
-    def render(self,
-               surface,
-               coordinate_converter: CoordinateConverter,
-               location: typing.Tuple[float, float],
-               direction: float,
-               view_field: float = 360,
-               color: typing.Tuple[int, int, int] = (180, 180, 180)):
-
-        import pygame
-
-        visibility_polygon_vertices = self.get_visibility_polygon(src=location,
-                                                                  direction=direction,
-                                                                  view_field=view_field)
-
-        pygame.draw.polygon(surface,
-                            color,
-                            [coordinate_converter.from_canonical((point.x, point.y))
-                             for point
-                             in visibility_polygon_vertices])
-
-        pygame.draw.circle(surface=surface,
-                           color=(0, 0, 255),
-                           center=coordinate_converter.from_canonical(location),
-                           radius=5,
-                           width=2)
