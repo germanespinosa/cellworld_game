@@ -3,8 +3,7 @@ from .agent import AgentState
 from .navigation import Navigation
 from .navigation_agent import NavigationAgent
 from .resources import Resources
-import shapely as sp
-
+from .polygon import Polygon
 
 class Mouse(NavigationAgent):
     def __init__(self,
@@ -28,6 +27,6 @@ class Mouse(NavigationAgent):
         return rotated_sprite
 
     @staticmethod
-    def create_polygon() -> sp.Polygon:
-        return sp.Polygon([(.015, 0), (0, 0.005), (-.015, 0), (0, -0.005)])
+    def create_polygon() -> Polygon:
+        return Polygon([(.015, 0), (0, 0.005), (-.015, 0), (0, -0.005)])
 

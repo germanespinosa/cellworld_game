@@ -37,7 +37,7 @@ def polygons_to_sides(polygons):
     internal_sides = []
     # Process the exterior ring
     for polygon in polygons:
-        exterior_coords = list(polygon.exterior.coords)
+        exterior_coords = list(polygon)
         origin = add_vertex(sp.Point(exterior_coords[0]))
         vertices_sides.append([])
         point_a = origin

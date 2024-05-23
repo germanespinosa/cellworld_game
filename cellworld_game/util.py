@@ -32,18 +32,7 @@ def generate_distinct_colors(n):
     return colors
 
 
-def create_hexagon(center: tuple, diameter: float, angle: float) -> sp.Polygon:
-    """
-    Create a hexagon centered at the origin, with a specified rotation angle (in degrees)
-    and diameter (distance between opposite vertices).
-
-    Parameters:
-    angle (float): Rotation angle in degrees.
-    diameter (float): Diameter of the hexagon (distance between opposite vertices).
-
-    Returns:
-    Polygon: A Shapely Polygon object representing the hexagon.
-    """
+def create_hexagon1(center: tuple, diameter: float, angle: float) -> sp.Polygon:
     radius = diameter / 2
     rotation = math.radians(angle + 90)
     # Generate the points for the hexagon

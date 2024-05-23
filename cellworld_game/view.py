@@ -69,12 +69,12 @@ class View(object):
         for occlusion in self.model.occlusions:
             pygame.draw.polygon(surface,
                                 self.occlusion_color,
-                                [coordinate_converter.from_canonical(point) for point in occlusion.exterior.coords])
+                                [coordinate_converter.from_canonical(point) for point in occlusion])
 
     def render_arena(self, surface, coordinate_converter):
         pygame.draw.polygon(surface,
                             self.arena_color,
-                            [coordinate_converter.from_canonical(point) for point in self.model.arena.exterior.coords])
+                            [coordinate_converter.from_canonical(point) for point in self.model.arena])
 
     def render_visibility(self, surface, coordinate_converter):
         if self.agent_perspective != -1:

@@ -11,7 +11,7 @@ from .geometry import polygons_to_sides
 class Visibility:
     def __init__(self, arena: sp.Polygon, occlusions: typing.List[sp.Polygon]):
         self.walls, self.walls_centroids, self.vertices, self.walls_vertices = polygons_to_sides(occlusions + [arena])
-        arena_vertices = [sp.Point(c) for c in arena.exterior.coords[1:]]
+        arena_vertices = [sp.Point(c) for c in arena[1:]]
         self.max_distance = max([v1.distance(v2) for v1 in arena_vertices for v2 in arena_vertices])
 
     def walls_by_distance(self,

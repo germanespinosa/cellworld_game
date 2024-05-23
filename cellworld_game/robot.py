@@ -1,4 +1,3 @@
-import shapely as sp
 import random
 import typing
 import pygame
@@ -6,6 +5,7 @@ from .agent import AgentState
 from .navigation import Navigation
 from .navigation_agent import NavigationAgent
 from .resources import Resources
+from .polygon import Polygon
 
 
 class Robot(NavigationAgent):
@@ -33,8 +33,8 @@ class Robot(NavigationAgent):
         return rotated_sprite
 
     @staticmethod
-    def create_polygon() -> sp.Polygon:
-        return sp.Polygon([(.02, 0.013), (-.02, 0.013), (-.02, -0.013), (.02, -0.013), (.025, -0.01), (.025, 0.01)])
+    def create_polygon() -> Polygon:
+        return Polygon([(.02, 0.013), (-.02, 0.013), (-.02, -0.013), (.02, -0.013), (.025, -0.01), (.025, 0.01)])
 
     def step(self, delta_t: float):
         NavigationAgent.step(self=self,

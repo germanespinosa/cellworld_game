@@ -19,10 +19,17 @@ class IPolygon(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __iter__(self) -> typing.Tuple[float, float]:
-        while False:
-            yield None
+    def sides(self):
+        raise NotImplementedError
 
+    def __iter__(self) -> typing.Tuple[float, float]:
+        side_count = self.sides()
+        if side_count:
+            for i in range(side_count):
+                yield self[i]
+            yield self[0]
+
+    @abstractmethod
     def __getitem__(self, item) -> typing.Tuple[float, float]:
         raise NotImplementedError
 

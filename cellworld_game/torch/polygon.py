@@ -10,10 +10,13 @@ class Polygon(IPolygon):
             self.vertices = vertices.to(default_device)
         else:
             self.vertices = torch.tensor(vertices, device=default_device)
-        self.edge_count = len(self.vertices)
+        self._sides = len(self.vertices)
         self._vertices_x: torch.tensor = None
         self._vertices_y: torch.tensor = None
         self._edges: torch.tensor = None
+
+    def sides(self):
+        return self._sides
 
     @property
     def vertices_x(self) -> torch.tensor:
@@ -30,7 +33,7 @@ class Polygon(IPolygon):
     @property
     def edges(self) -> torch.tensor:
         if self._edges is None:
-            self._edges = self.vertices[(torch.arange(self.edge_count) + 1) % self.edge_count] - self.vertices
+            self._edges = self.vertices[(torch.arange(self._sides) + 1) % self._sides] - self.vertices
         return self._edges
 
     def contains(self, points):
@@ -79,9 +82,8 @@ class Polygon(IPolygon):
         separated = (max1 < min2) | (max2 < min1)
         return not separated.any()
 
-    def __iter__(self) -> typing.Tuple[float, float]:
-        for i in range(self.edge_count):
-            yield float(self.vertices[i, 0]), float(self.vertices[i, 1])
+    def __getitem__(self, item) -> typing.Tuple[float, float]:
+        return tuple(self.vertices[item, :].tolist())
 
     def translate_rotate(self,
                          translation: typing.Tuple[float, float],

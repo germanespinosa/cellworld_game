@@ -1,11 +1,9 @@
 import typing
 import pygame
-import shapely as sp
 from .resources import Resources
-from .util import create_hexagon, move_point, distance
-from shapely.affinity import rotate, translate
+from .util import move_point, distance
 from .coordinate_converter import CoordinateConverter
-
+from .polygon import Polygon
 
 
 class AgentState(object):
@@ -94,24 +92,16 @@ class Agent(object):
         return rotated_sprite
 
     @staticmethod
-    def create_polygon() -> sp.Polygon:
-        return create_hexagon((0, 0), .05, 30)
+    def create_polygon() -> Polygon:
+        return Polygon.regular((0, 0), .05, 30, sides=6)
 
     def get_polygon(self,
-                    state: AgentState = None) -> sp.Polygon:
+                    state: AgentState = None) -> Polygon:
         # Rotate and then translate the arrow polygon
         if state:
-            x, y = state.location
-            direction = state.direction
+            return self.polygon.translate_rotate(translation=state.location, rotation=state.direction)
         else:
-            x, y = self._state.location
-            direction = self._state.direction
-        rotated_polygon = rotate(self.polygon,
-                                 direction,
-                                 origin=(0, 0),
-                                 use_radians=False)
-        translated_polygon = translate(rotated_polygon, x, y)
-        return translated_polygon
+            return self.polygon.translate_rotate(translation=self.state.location, rotation=self.state.direction)
 
     def get_sprite(self) -> pygame.Surface:
         rotated_sprite = pygame.transform.rotate(self.sprite, self._state.direction)

@@ -6,6 +6,7 @@ import shapely as sp
 
 class Polygon(IPolygon):
     def __init__(self, vertices):
+        self._sides = len(vertices)
         self._vertices = None
         self._points = None
         self._polygon = None
@@ -14,6 +15,9 @@ class Polygon(IPolygon):
                 self._points = vertices
             else:
                 self._vertices = vertices
+
+    def sides(self):
+        return self._sides
 
     @property
     def vertices(self) -> typing.List[typing.Tuple[float, float]]:
@@ -43,9 +47,8 @@ class Polygon(IPolygon):
     def intersects(self, other: "Polygon"):
         return self.polygon.intersects(other.polygon)
 
-    def __iter__(self) -> typing.Tuple[float, float]:
-        for v in self.vertices:
-            yield v
+    def __getitem__(self, item) -> typing.Tuple[float, float]:
+        return self.vertices[item]
 
     def translate_rotate(self,
                          translation: typing.Tuple[float, float],
