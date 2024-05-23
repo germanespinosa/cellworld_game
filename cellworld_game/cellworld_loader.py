@@ -2,6 +2,7 @@ import typing
 import cellworld as cw
 from .util import create_hexagon
 from .navigation import Navigation
+from .polygon import Polygon
 
 
 class CellWorldLoader:
@@ -33,11 +34,21 @@ class CellWorldLoader:
         arena_transformation: cw.Transformation = self.world.implementation.space.transformation
         cell_transformation: cw.Transformation = self.world.implementation.cell_transformation
         self.arena = create_hexagon(arena_center, arena_transformation.size, arena_transformation.rotation)
+        self.arena_polygon = Polygon.regular(center=arena_center,
+                                             diameter=arena_transformation.size,
+                                             angle=arena_transformation.rotation,
+                                             sides=6)
         self.occlusions = [create_hexagon(cell.location.get_values(),
                                           cell_transformation.size,
                                           arena_transformation.rotation + cell_transformation.rotation)
                            for cell
                            in self.world.cells.occluded_cells()]
+        self.occlusions_polygons = [Polygon.regular(center=cell.location.get_values(),
+                                                    diameter=cell_transformation.size,
+                                                    angle=arena_transformation.rotation + cell_transformation.rotation,
+                                                    sides=self.world.configuration.cell_shape.sides)
+                                    for cell
+                                    in self.world.cells.occluded_cells()]
         spawn_cells = cw.Cell_group_builder.get_from_name("hexagonal",
                                                           world_name,
                                                           "spawn_locations")
