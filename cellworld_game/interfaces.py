@@ -22,6 +22,10 @@ class IPolygon(ABC):
     def sides(self):
         raise NotImplementedError
 
+    @abstractmethod
+    def bounds(self) -> typing.Tuple[float, float, float, float]:
+        raise NotImplementedError
+
     def __iter__(self) -> typing.Tuple[float, float]:
         side_count = self.sides()
         if side_count:

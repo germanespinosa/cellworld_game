@@ -14,9 +14,15 @@ class Polygon(IPolygon):
         self._vertices_x: torch.tensor = None
         self._vertices_y: torch.tensor = None
         self._edges: torch.tensor = None
+        self._bounds = None
 
     def sides(self):
         return self._sides
+
+    def bounds(self) -> typing.Tuple[float, float, float, float]:
+        if self._bounds is None:
+            self._bounds = tuple(self.vertices.min(dim=0)[0].tolist()) + tuple(self.vertices.max(dim=0)[0].tolist())
+        return self._bounds
 
     @property
     def vertices_x(self) -> torch.tensor:
@@ -41,6 +47,9 @@ class Polygon(IPolygon):
         if isinstance(points, Polygon):
             contain_vertices = self.contains(points.vertices)
             return torch.all(contain_vertices)
+
+        if not isinstance(points, torch.Tensor):
+            points = torch.tensor(points, device=default_device)
 
         n_points = points.shape[0]
         n_vertices = self.vertices.shape[0]

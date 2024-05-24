@@ -12,6 +12,12 @@ class CoordinateConverter(object):
         self.screen_offset = (self.screen_width - self.screen_height) / 2
         self.hexa_ratio = (math.sqrt(3) / 2)
 
+    def scale_to_canonical(self, screen_value: float) -> float:
+        return screen_value / self.screen_width
+
+    def scale_from_canonical(self, canonical_value: float) -> float:
+        return canonical_value * self.screen_width
+
     def from_canonical(self, canonical: typing.Union[tuple, float]):
         if isinstance(canonical, float):
             return canonical * self.screen_width
