@@ -62,7 +62,6 @@ def polygons_to_sides(polygons):
         if i not in internal_sides:
             filtered_sides_vertices.append(side_vertices)
 
-    sides = []
     sides_centroids = []
     for a, b in filtered_sides_vertices:
         side = sp.LineString([vertices[a], vertices[b]])
@@ -81,3 +80,50 @@ def polygons_to_sides(polygons):
                                            device=default_device)
 
     return vertices, sides_centroids, filtered_sides_vertices
+
+
+def get_points_angles(src_tensor: torch.tensor,
+                      locations: torch.tensor):
+    if locations.numel() == 0:
+        return torch.tensor([], device=default_device)
+    diff = (locations - src_tensor)
+    vertices_angles = torch.atan2(diff[:, 1], diff[:, 0])
+    return vertices_angles
+
+
+def get_points_distances(src_tensor: torch.tensor,
+                         locations: torch.tensor):
+    if locations.numel() == 0:
+        return torch.tensor([], device=default_device)
+    distances = torch.sum((locations - src_tensor) ** 2, dim=1)
+    return distances
+
+
+def get_intersections(angles: torch.tensor,
+                      segments: torch.tensor):
+
+    A = angles.unsqueeze(1)  # Shape (num_rays, 1)
+    V1 = segments[:, 0].unsqueeze(0)  # Shape (1, num_segments)
+    V2 = segments[:, 1].unsqueeze(0)  # Shape (1, num_segments)
+    diff = torch.abs(V2 - V1)
+
+    # Case 1: V1 < V2 and the difference < PI
+    case1 = (V1 < V2) & (diff < torch.pi)
+    intersect_case1 = case1 & (A >= V1) & (A <= V2)
+
+    # Case 2: V2 < V1 and the difference < PI
+    case2 = (V2 < V1) & (diff < torch.pi)
+    intersect_case2 = case2 & (A >= V2) & (A <= V1)
+
+    # Case 3: V1 < V2 and the difference > PI
+    case3 = (V1 < V2) & (diff > torch.pi)
+    intersect_case3 = case3 & ((A >= V2) | (A <= V1))
+
+    # Case 4: V2 < V1 and the difference > PI
+    case4 = (V2 < V1) & (diff > torch.pi)
+    intersect_case4 = case4 & ((A >= V1) | (A <= V2))
+
+    # Combine the results from all cases
+    intersect = intersect_case1 | intersect_case2 | intersect_case3 | intersect_case4
+
+    return intersect

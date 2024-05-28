@@ -7,7 +7,7 @@ from .polygon import Polygon
 
 
 class AgentState(object):
-    def __init__(self, location: typing.Tuple[float, float] = (0, 0), direction: float = 0):
+    def __init__(self, location: Point.type = (0, 0), direction: float = 0):
         self.location = location
         self.direction = direction
 
@@ -20,7 +20,7 @@ class AgentState(object):
                rotation: float) -> "AgentState":
         new_direction = self.direction + rotation
         return AgentState(location=Point.move(start=self.location,
-                                              direction=new_direction,
+                                              direction_degrees=new_direction,
                                               distance=distance),
                           direction=new_direction)
 

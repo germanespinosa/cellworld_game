@@ -5,6 +5,7 @@ from .navigation_agent import NavigationAgent
 from .resources import Resources
 from .polygon import Polygon
 
+
 class Mouse(NavigationAgent):
     def __init__(self,
                  start_state: AgentState,

@@ -77,8 +77,8 @@ class NavigationAgent(Agent):
 
                 normalized_distance_error = max(distance_error/.2, 1)
 
-                destination_direction = Direction.to(src=self.state.location,
-                                                     dst=self.next_step())
+                destination_direction = Direction.degrees(src=self.state.location,
+                                                          dst=self.next_step())
                 direction_error = Direction.difference(direction1=self.state.direction,
                                                        direction2=destination_direction)
                 normalized_direction_error = Direction.error_normalization(direction_error=direction_error)

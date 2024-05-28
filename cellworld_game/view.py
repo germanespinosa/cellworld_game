@@ -19,6 +19,7 @@ def generate_distinct_colors(n):
 
     return colors
 
+
 class View(object):
     def __init__(self,
                  model: Model,

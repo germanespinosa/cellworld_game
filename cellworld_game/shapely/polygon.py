@@ -2,6 +2,7 @@ import typing
 from ..interfaces import IPolygon
 import shapely.affinity as spa
 import shapely as sp
+from ..util import Point
 
 
 class Polygon(IPolygon):
@@ -20,7 +21,7 @@ class Polygon(IPolygon):
         return self._sides
 
     @property
-    def vertices(self) -> typing.List[typing.Tuple[float, float]]:
+    def vertices(self) -> typing.List[Point.type]:
         if self._vertices is None:
             self._vertices = [(p.x, p.y) for p in self.points]
         return self._vertices
@@ -51,9 +52,9 @@ class Polygon(IPolygon):
         return self.vertices[item]
 
     def translate_rotate(self,
-                         translation: typing.Tuple[float, float],
+                         translation: Point.type,
                          rotation: float,
-                         rotation_center: typing.Tuple[float, float] = (0, 0)) -> "Polygon":
+                         rotation_center: Point.type = (0, 0)) -> "Polygon":
         delta_x, delta_y = translation
         rotated_polygon = spa.rotate(self.polygon,
                                      rotation,

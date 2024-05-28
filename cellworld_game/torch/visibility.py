@@ -2,11 +2,11 @@ import torch
 import math
 import typing
 import shapely as sp
-from .geometry import polygons_to_sides, normalize_angle
-from ..coordinate_converter import CoordinateConverter
+from .geometry import polygons_to_sides, normalize_angle, get_points_angles, get_points_distances, get_intersections
 from .device import default_device
 from .polygon import Polygon
 from ..interfaces import IVisibility
+from ..util import Point
 
 
 class Visibility(IVisibility):
@@ -14,79 +14,38 @@ class Visibility(IVisibility):
         self.occlusion_vertices, self.occlusions_centroids, self.occlusions_vertices_indices = polygons_to_sides(occlusions)
         self.wall_vertices, self.walls_centroids, self.walls_vertices_indices = polygons_to_sides([arena])
 
-    def get_points_angles(self,
-                          src_tensor: torch.tensor,
-                          locations: torch.tensor):
-        if locations.numel() == 0:
-            return torch.tensor([], device=default_device)
-        diff = (locations - src_tensor).to(default_device)
-        vertices_angles = torch.atan2(diff[:, 1], diff[:, 0])
-        return vertices_angles
-
-    def get_points_distances(self,
-                             src_tensor: torch.tensor,
-                             locations: torch.tensor):
-        if locations.numel() == 0:
-            return torch.tensor([], device=default_device)
-        distances = torch.sum((locations - src_tensor) ** 2, dim=1).to(default_device)
-        return distances
-
-    @staticmethod
-    def get_intersections(angles: torch.tensor,
-                          segments: torch.tensor):
-
-        A = angles.unsqueeze(1)  # Shape (num_rays, 1)
-        V1 = segments[:, 0].unsqueeze(0)  # Shape (1, num_segments)
-        V2 = segments[:, 1].unsqueeze(0)  # Shape (1, num_segments)
-        diff = torch.abs(V2 - V1)
-
-        # Case 1: V1 < V2 and the difference < PI
-        case1 = (V1 < V2) & (diff < torch.pi)
-        intersect_case1 = case1 & (A >= V1) & (A <= V2)
-
-        # Case 2: V2 < V1 and the difference < PI
-        case2 = (V2 < V1) & (diff < torch.pi)
-        intersect_case2 = case2 & (A >= V2) & (A <= V1)
-
-        # Case 3: V1 < V2 and the difference > PI
-        case3 = (V1 < V2) & (diff > torch.pi)
-        intersect_case3 = case3 & ((A >= V2) | (A <= V1))
-
-        # Case 4: V2 < V1 and the difference > PI
-        case4 = (V2 < V1) & (diff > torch.pi)
-        intersect_case4 = case4 & ((A >= V1) | (A <= V2))
-
-        # Combine the results from all cases
-        intersect = intersect_case1 | intersect_case2 | intersect_case3 | intersect_case4
-
-        return intersect
+    def line_of_sight_multiple(self,
+                               src: Point.type,
+                               dst):
+        polygon = self.get_visibility_polygon(src=src, direction=0)
+        return polygon.contains(dst)
 
     def line_of_sight(self,
-                      src: typing.Union[typing.Tuple[float, float]],
-                      dst: typing.Union[typing.Tuple[float, float]]) -> bool:
+                      src: Point.type,
+                      dst: Point.type) -> bool:
 
         src_tensor = torch.tensor(src, device=default_device)
         dst_tensor = torch.tensor(dst, device=default_device)
 
-        occlusions_vertices_angles = self.get_points_angles(src_tensor=src_tensor,
-                                                            locations=self.occlusion_vertices)
+        occlusions_vertices_angles = get_points_angles(src_tensor=src_tensor,
+                                                       locations=self.occlusion_vertices)
 
         occlusions_segments_angles = self.__get_segments_vertices_angles__(vertices_angles=occlusions_vertices_angles,
                                                                            segments=self.occlusions_vertices_indices)
 
-        ray = self.get_points_angles(src_tensor=src_tensor, locations=dst_tensor.unsqueeze(0))
+        ray = get_points_angles(src_tensor=src_tensor, locations=dst_tensor.unsqueeze(0))
 
-        intersections = self.get_intersections(angles=ray,
-                                               segments=occlusions_segments_angles)[0, :]
+        intersections = get_intersections(angles=ray,
+                                          segments=occlusions_segments_angles)[0, :]
 
         if not intersections.any():
             return True
 
-        occlusions_distances = self.get_points_distances(src_tensor=src_tensor,
-                                                         locations=self.occlusions_centroids[intersections])
+        occlusions_distances = get_points_distances(src_tensor=src_tensor,
+                                                    locations=self.occlusions_centroids[intersections])
 
-        dst_distance = self.get_points_distances(src_tensor=src_tensor,
-                                                 locations=dst_tensor.unsqueeze(0))
+        dst_distance = get_points_distances(src_tensor=src_tensor,
+                                            locations=dst_tensor.unsqueeze(0))
 
         if (dst_distance < occlusions_distances).all():
             return True
@@ -110,7 +69,7 @@ class Visibility(IVisibility):
                             vertices_points[segments[:, 1]]], dim=1).to(default_device)
 
     def get_visibility_polygon(self,
-                               src: typing.Tuple[float, float],
+                               src: Point.type,
                                direction: float,
                                view_field: float = 360):
 
@@ -118,8 +77,8 @@ class Visibility(IVisibility):
 
         src_tensor = torch.tensor(src, device=default_device)
 
-        occlusions_vertices_angles = self.get_points_angles(src_tensor=src_tensor,
-                                                            locations=self.occlusion_vertices)
+        occlusions_vertices_angles = get_points_angles(src_tensor=src_tensor,
+                                                       locations=self.occlusion_vertices)
 
         occlusions_segments_angles = self.__get_segments_vertices_angles__(vertices_angles=occlusions_vertices_angles,
                                                                            segments=self.occlusions_vertices_indices)
@@ -127,11 +86,11 @@ class Visibility(IVisibility):
         occlusions_segments_points = self.__get_segments_vertices_points__(vertices_points=self.occlusion_vertices,
                                                                            segments=self.occlusions_vertices_indices)
 
-        occlusions_distances = self.get_points_distances(src_tensor=src_tensor,
-                                                         locations=self.occlusions_centroids)
+        occlusions_distances = get_points_distances(src_tensor=src_tensor,
+                                                    locations=self.occlusions_centroids)
 
-        walls_vertices_angles = self.get_points_angles(src_tensor=src_tensor,
-                                                       locations=self.wall_vertices)
+        walls_vertices_angles = get_points_angles(src_tensor=src_tensor,
+                                                  locations=self.wall_vertices)
 
         walls_segments_angles = self.__get_segments_vertices_angles__(vertices_angles=walls_vertices_angles,
                                                                       segments=self.walls_vertices_indices)
@@ -139,8 +98,8 @@ class Visibility(IVisibility):
         walls_segments_points = self.__get_segments_vertices_points__(vertices_points=self.wall_vertices,
                                                                       segments=self.walls_vertices_indices)
 
-        walls_distances = self.get_points_distances(src_tensor=src_tensor,
-                                                    locations=self.walls_centroids) + 1.0 # this ensures walls are checked last for intersections
+        walls_distances = get_points_distances(src_tensor=src_tensor,
+                                               locations=self.walls_centroids) + 1.0 # this ensures walls are checked last for intersections
 
         vertices_angles = torch.cat((occlusions_vertices_angles, walls_vertices_angles), dim=0)
         segments_vertices_angles = torch.cat((occlusions_segments_angles, walls_segments_angles), dim=0)
@@ -170,8 +129,8 @@ class Visibility(IVisibility):
             lower_bound_index = torch.nonzero((rays_indices == 0), as_tuple=True)[0]
             upper_bound_index = torch.nonzero((rays_indices == 1), as_tuple=True)[0]
 
-        intersections = self.get_intersections(angles=ordered_rays,
-                                               segments=segments_vertices_angles)
+        intersections = get_intersections(angles=ordered_rays,
+                                          segments=segments_vertices_angles)
 
         segments_distances = segments_distances.expand_as(intersections)
 

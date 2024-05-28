@@ -6,6 +6,8 @@ from .geometry import distance2, move, atan2, theta_in_between
 from .geometry import polygons_to_sides
 from .polygon import Polygon
 from ..interfaces import IVisibility
+from ..util import Point
+
 
 class Visibility(IVisibility):
     def __init__(self, arena: sp.Polygon, occlusions: typing.List[sp.Polygon]):
@@ -39,9 +41,14 @@ class Visibility(IVisibility):
                 return ray.intersection(side)
         return None
 
+    def line_of_sight_multiple(self,
+                               src: Point.type,
+                               dst):
+        return [self.line_of_sight(dst) for point in dst]
+
     def line_of_sight(self,
-                      src: typing.Union[sp.Point, typing.Tuple[float, float]],
-                      dst: typing.Union[sp.Point, typing.Tuple[float, float]],
+                      src: typing.Union[sp.Point, Point.type],
+                      dst: typing.Union[sp.Point, Point.type],
                       walls_by_distance=None) -> bool:
         if isinstance(src, tuple):
             src = sp.Point(*src)
@@ -62,7 +69,7 @@ class Visibility(IVisibility):
         return True
 
     def get_visibility_polygon(self,
-                               src: typing.Tuple[float, float],
+                               src: Point.type,
                                direction: float,
                                view_field: float = 360):
 

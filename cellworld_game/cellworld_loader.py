@@ -51,12 +51,12 @@ class CellWorldLoader:
         self.full_action_list = self.open_locations
 
         try:
-            lppo_cells = cw.Cell_group_builder.get_from_name("hexagonal",
-                                                             world_name,
-                                                             "lppo")
-
-            self.tlppo_action_list = [tuple(self.world.cells[sc].location.get_values()) for sc in lppo_cells]
-        except :
+            self.lppo = cw.Cell_group_builder.get_from_name("hexagonal",
+                                                            world_name,
+                                                            "lppo")
+            self.tlppo_action_list = [tuple(self.world.cells[sc].location.get_values()) for sc in self.lppo]
+        except:
+            self.lppo = []
             self.tlppo_action_list = []
 
         cell_visibility = cw.get_resource("graph", "hexagonal", world_name, "cell_visibility")

@@ -1,18 +1,19 @@
 import math
 import typing
-
+from .util import Point
 
 class Navigation:
     def __init__(self,
-                 locations: typing.List[typing.Optional[typing.Tuple[float, float]]],
+                 locations: typing.List[typing.Optional[Point.type]],
                  paths: typing.List[typing.List[int]],
                  visibility: typing.List[typing.List[typing.List[int]]]):
         self.locations = locations
         self.paths = paths
         self.visibility = visibility
+        self.cache: typing.Dict[typing.Tuple[int, int], typing.List[int]] = {}
 
     def closest_location(self,
-                         location: typing.Tuple[float, float]) -> int:
+                         location: Point.type) -> int:
         min_dist2 = math.inf
         closest = None
         for i, l in enumerate(self.locations):
@@ -25,21 +26,26 @@ class Navigation:
         return closest
 
     def get_path(self,
-                 src: typing.Tuple[float, float],
-                 dst: typing.Tuple[float, float]) -> typing.List[typing.Tuple[float, float]]:
+                 src: Point.type,
+                 dst: Point.type) -> typing.List[Point.type]:
         src_index = self.closest_location(location=src)
         dst_index = self.closest_location(location=dst)
-        current = src_index
-        last_step = src_index
-        path_indexes = []
-        while current is not None and current != dst_index:
-            next_step = self.paths[current][dst_index]
-            if next_step == current:
-                break
-            is_visible = next_step in self.visibility[last_step]
-            if not is_visible:
-                path_indexes.append(current)
-                last_step = current
-            current = next_step
-        path_indexes.append(dst_index)
+        cache_index = (src_index, dst_index)
+        if cache_index in self.cache:
+            path_indexes = self.cache[cache_index]
+        else:
+            current = src_index
+            last_step = src_index
+            path_indexes = []
+            while current is not None and current != dst_index:
+                next_step = self.paths[current][dst_index]
+                if next_step == current:
+                    break
+                is_visible = next_step in self.visibility[last_step]
+                if not is_visible:
+                    path_indexes.append(current)
+                    last_step = current
+                current = next_step
+            path_indexes.append(dst_index)
+            self.cache[cache_index] = path_indexes
         return [self.locations[s] for s in path_indexes]

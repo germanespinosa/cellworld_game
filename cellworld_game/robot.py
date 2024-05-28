@@ -6,12 +6,12 @@ from .navigation import Navigation
 from .navigation_agent import NavigationAgent
 from .resources import Resources
 from .polygon import Polygon
-
+from .util import Point
 
 class Robot(NavigationAgent):
     def __init__(self,
-                 start_locations: typing.List[typing.Tuple[float, float]],
-                 open_locations: typing.List[typing.Tuple[float, float]],
+                 start_locations: typing.List[Point.type],
+                 open_locations: typing.List[Point.type],
                  navigation: Navigation):
         NavigationAgent.__init__(self,
                                  navigation=navigation,

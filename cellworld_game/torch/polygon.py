@@ -1,6 +1,7 @@
 import torch
 import typing
 from ..interfaces import IPolygon
+from ..util import Point
 from .device import default_device
 
 
@@ -95,9 +96,9 @@ class Polygon(IPolygon):
         return tuple(self.vertices[item, :].tolist())
 
     def translate_rotate(self,
-                         translation: typing.Tuple[float, float],
+                         translation: Point.type,
                          rotation: float,
-                         rotation_center: typing.Tuple[float, float] = (0, 0)) -> "Polygon":
+                         rotation_center: Point.type = (0, 0)) -> "Polygon":
 
         t = torch.tensor(translation, device=default_device)
         rc = torch.tensor(rotation_center, device=default_device)

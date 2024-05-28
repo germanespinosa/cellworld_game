@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from .coordinate_converter import CoordinateConverter
 import typing
 import math
-
+from .util import Point
 
 class IPolygon(ABC):
 
@@ -26,7 +26,7 @@ class IPolygon(ABC):
     def bounds(self) -> typing.Tuple[float, float, float, float]:
         raise NotImplementedError
 
-    def __iter__(self) -> typing.Tuple[float, float]:
+    def __iter__(self) -> Point.type:
         side_count = self.sides()
         if side_count:
             for i in range(side_count):
@@ -34,14 +34,14 @@ class IPolygon(ABC):
             yield self[0]
 
     @abstractmethod
-    def __getitem__(self, item) -> typing.Tuple[float, float]:
+    def __getitem__(self, item) -> Point.type:
         raise NotImplementedError
 
     @abstractmethod
     def translate_rotate(self,
-                         translation: typing.Tuple[float, float],
+                         translation: Point.type,
                          rotation: float,
-                         rotation_center: typing.Tuple[float, float] = (0, 0)) -> "Polygon":
+                         rotation_center: Point.type = (0, 0)) -> "Polygon":
         raise NotImplementedError
 
     @classmethod
@@ -79,13 +79,19 @@ class IVisibility(ABC):
 
     @abstractmethod
     def line_of_sight(self,
-                      src: typing.Tuple[float, float],
-                      dst: typing.Tuple[float, float]) -> bool:
+                      src: Point.type,
+                      dst: Point.type) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def line_of_sight_multiple(self,
+                               src: Point.type,
+                               dst):
         raise NotImplementedError
 
     @abstractmethod
     def get_visibility_polygon(self,
-                               src: typing.Tuple[float, float],
+                               src: Point.type,
                                direction: float,
                                view_field: float = 360) -> IPolygon:
         raise NotImplementedError
@@ -93,7 +99,7 @@ class IVisibility(ABC):
     def render(self,
                surface,
                coordinate_converter: CoordinateConverter,
-               location: typing.Tuple[float, float],
+               location: Point.type,
                direction: float,
                view_field: float = 360,
                color: typing.Tuple[int, int, int] = (180, 180, 180)):
