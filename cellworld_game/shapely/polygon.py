@@ -6,16 +6,27 @@ from ..util import Point
 
 
 class Polygon(IPolygon):
+
     def __init__(self, vertices):
         self._sides = len(vertices)
         self._vertices = None
         self._points = None
         self._polygon = None
+        self._bounds = None
         if vertices:
             if isinstance(vertices[0], sp.Point):
                 self._points = vertices
             else:
                 self._vertices = vertices
+
+    def bounds(self) -> typing.Tuple[float, float, float, float]:
+        if self._bounds is None:
+            min_x = min([p[0] for p in self.vertices])
+            min_y = min([p[1] for p in self.vertices])
+            max_x = max([p[0] for p in self.vertices])
+            max_y = max([p[1] for p in self.vertices])
+            self._bounds = (min_x, min_y, max_x, max_y)
+        return self._bounds
 
     def sides(self):
         return self._sides
