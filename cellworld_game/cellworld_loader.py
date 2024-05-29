@@ -7,6 +7,7 @@ from .polygon import Polygon
 class CellWorldLoader:
     def __init__(self,
                  world_name: str):
+        self.world_name = world_name
         self.world = cw.World.get_from_parameters_names(world_configuration_name="hexagonal",
                                                         world_implementation_name="canonical",
                                                         occlusions_name=world_name)
@@ -64,3 +65,16 @@ class CellWorldLoader:
         self.navigation = Navigation(locations=self.locations,
                                      paths=self.paths,
                                      visibility=cell_visibility)
+        self._options_graph = None
+    @property
+    def options_graph(self) -> cw.Graph:
+        if self._options_graph is None:
+            graph_builder = cw.get_resource("graph",
+                                            "hexagonal",
+                                            self.world_name,
+                                            "options")
+            # options_graph = cw.Graph(builder=graph_builder,
+            #                          cells=self.world.cells)
+            cell_index = {cell.id: index for index, cell in enumerate(self.world.cells.free_cells())}
+            self._options_graph = [[cell_index[cell_id] for cell_id in cnn] for cnn in graph_builder if cnn]
+        return self._options_graph
