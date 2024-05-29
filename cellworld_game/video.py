@@ -28,7 +28,6 @@ def save_video_output(model: Model,
 
     def on_frame(surface, _):
         nonlocal frame_count
-        print("FRAME:", frame_count)
         frame_count += 1
         frame = np.rot90(pygame.surfarray.array3d(surface))
         frame = np.flipud(frame)
