@@ -11,3 +11,4 @@ from .visibility import Visibility
 from .tasks import BotEvade, Oasis, DualEvade
 from .video import save_video_output
 from .polygon import Polygon
+from .points import Points

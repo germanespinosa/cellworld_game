@@ -4,6 +4,17 @@ import typing
 import math
 from .util import Point
 
+
+class IPoints(ABC):
+    @abstractmethod
+    def __init__(self, point_list: typing.List[Point.type]) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def closest(self, point: Point.type) -> int:
+        raise NotImplementedError
+
+
 class IPolygon(ABC):
 
     @abstractmethod
