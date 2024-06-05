@@ -128,7 +128,7 @@ class View(object):
                 if self.on_mouse_move:
                     self.on_mouse_move(canonical_x_y)
             elif event.type == pygame.MOUSEWHEEL:
-                canonical_x_y = self.coordinate_converter.to_canonical(event.pos)
+                canonical_x_y = self.coordinate_converter.to_canonical((event.x, event.y))
                 if self.on_mouse_wheel:
                     self.on_mouse_wheel(event.button, canonical_x_y)
             elif event.type == pygame.KEYDOWN:

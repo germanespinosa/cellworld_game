@@ -10,7 +10,7 @@ bot_evade = BotEvade(world_name="21_05",
                      render=True,
                      use_predator=True)
 
-save_video_output(bot_evade, "./videos")
+save_video_output(bot_evade, "videos")
 
 bot_evade.view.agent_perspective = 1
 
