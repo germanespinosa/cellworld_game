@@ -4,15 +4,18 @@ import typing
 import shapely as sp
 from .agent import Agent, AgentState
 from .visibility import Visibility
+from .polygon import Polygon
 
 
 class Model(object):
 
     def __init__(self,
-                 arena,
-                 occlusions,
+                 world_name: str,
+                 arena: Polygon,
+                 occlusions: typing.List[Polygon],
                  real_time: bool = False,
                  time_step: float = 0.1):
+        self.world_name = world_name
         self.arena = arena
         self.occlusions = occlusions
         self.real_time = real_time

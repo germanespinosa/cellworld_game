@@ -40,6 +40,7 @@ class Oasis(Model):
         self.goal_sequence: typing.List[int] = []
 
         Model.__init__(self,
+                       world_name=world_name,
                        arena=self.loader.arena,
                        occlusions=self.loader.occlusions,
                        time_step=time_step,

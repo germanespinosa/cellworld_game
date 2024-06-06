@@ -27,6 +27,7 @@ class BotEvade(Model):
         self.loader = CellWorldLoader(world_name=world_name)
 
         Model.__init__(self,
+                       world_name=world_name,
                        arena=self.loader.arena,
                        occlusions=self.loader.occlusions,
                        time_step=time_step,
