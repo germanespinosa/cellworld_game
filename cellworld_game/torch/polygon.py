@@ -1,3 +1,5 @@
+import math
+
 import torch
 import typing
 from ..interfaces import IPolygon
@@ -102,7 +104,7 @@ class Polygon(IPolygon):
 
         t = torch.tensor(translation, device=default_device)
         rc = torch.tensor(rotation_center, device=default_device)
-        r = torch.tensor(rotation, device=default_device)
+        r = torch.tensor(math.radians(-rotation), device=default_device)
         vertices = self.vertices.clone() - rc
         rotation_matrix = torch.tensor([
             [torch.cos(r), -torch.sin(r)],

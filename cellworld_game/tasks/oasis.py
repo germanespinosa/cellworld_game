@@ -34,7 +34,6 @@ class Oasis(Model):
         self.puff_cool_down_time = puff_cool_down_time
         self.puff_threshold = puff_threshold
         self.goal_threshold = goal_threshold
-        self.render = render
         self.loader = CellWorldLoader(world_name=world_name)
         self.goal_location = None
         self.goal_sequence: typing.List[int] = []
@@ -44,7 +43,8 @@ class Oasis(Model):
                        arena=self.loader.arena,
                        occlusions=self.loader.occlusions,
                        time_step=time_step,
-                       real_time=real_time)
+                       real_time=real_time,
+                       render=render)
 
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
@@ -61,9 +61,6 @@ class Oasis(Model):
 
         if self.render:
             import pygame
-            from ..view import View
-            self.view = View(model=self)
-            self.view.on_quit = self.__on_quit__
 
             def render_active_goal(surface: pygame.Surface,
                                    coordinate_converter: CoordinateConverter):

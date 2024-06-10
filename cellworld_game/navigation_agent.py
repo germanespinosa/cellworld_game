@@ -4,7 +4,7 @@ from .util import Point, Direction
 from .agent import Agent
 from .coordinate_converter import CoordinateConverter
 from .navigation import Navigation
-
+import typing
 
 class NavigationAgent(Agent):
 
@@ -13,7 +13,11 @@ class NavigationAgent(Agent):
                  max_forward_speed: float,
                  max_turning_speed: float,
                  threshold: float = 0.01,
-                 destination_update_rate: int = 10):
+                 destination_update_rate: int = 10,
+                 view_field: float = 360,
+                 size: float = 0.5,
+                 sprite_scale: float = 1,
+                 polygon_color: typing.Tuple[int, int, int] = (0, 80, 120)):
         self.max_forward_speed = max_forward_speed
         self.max_turning_speed = max_turning_speed
         self.threshold = threshold
@@ -24,7 +28,11 @@ class NavigationAgent(Agent):
         self.navigation_plan_update_wait = 0
         self.destination_wait = 0
         self.path = []
-        Agent.__init__(self)
+        Agent.__init__(self,
+                       view_field=view_field,
+                       size=size,
+                       sprite_scale=sprite_scale,
+                       polygon_color=polygon_color)
         self.collision = False
 
     def next_step(self):

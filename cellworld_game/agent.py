@@ -1,5 +1,5 @@
-import typing
 import pygame
+import typing
 from .resources import Resources
 from .util import Point
 from .coordinate_converter import CoordinateConverter
@@ -39,51 +39,62 @@ class AgentDynamics(object):
 
 
 class Agent(object):
+    class RenderMode(object):
+        SPRITE = 0
+        POLYGON = 1
 
     def __init__(self,
                  view_field: float = 360,
-                 collision: bool = True):
+                 collision: bool = True,
+                 size: float = .05,
+                 sprite_scale: float = 1.0,
+                 polygon_color: typing.Tuple[int, int, int] = (0, 80, 120)):
         self.visible = True
+        self.render_mode = Agent.RenderMode.SPRITE
         self.view_field = view_field
         self._state: AgentState = AgentState()
         self.dynamics: AgentDynamics = AgentDynamics(forward_speed=0,
                                                      turn_speed=0)
         self.polygon = self.create_polygon()
-        self.sprite = None
+        self.polygon_color = polygon_color
         self.collision = collision
+
+        self.size = size
+
+        self.sprite = None
+        self.sprite_scale = sprite_scale
+        self.event_handlers: typing.Dict[str, typing.List[typing.Callable]] = {"reset": [],
+                                                                               "step": []}
         self.on_reset = None
         self.on_step = None
         self.on_start = None
         self.name = ""
         self.model = None
-        self.trajectory: typing.List[AgentState] = []
-        self.coordinate_converter: typing.Optional[CoordinateConverter] = None
         self.running = False
-
-    def set_sprite_size(self, size: tuple):
-        self.sprite = pygame.transform.scale(self.create_sprite(), size)
+        self.data = None
 
     def set_state(self, state: AgentState) -> None:
-        self.trajectory.append(state)
         self._state = state
 
     @property
     def state(self) -> AgentState:
         return self._state
 
+    def __handle_event__(self, event_name, *args):
+        for handler in self.event_handlers[event_name]:
+            handler(*args)
+
+    def add_event_handler(self, event_name, handler):
+        if event_name not in self.event_handlers:
+            raise KeyError(f'Event handler "{event_name}" not defined')
+        self.event_handlers[event_name].append(handler)
+
     def reset(self) -> None:
-        self.trajectory.clear()
-        if self.on_reset:
-            self.on_reset()
+        self.__handle_event__("reset")
         self.running = True
 
-    def start(self) -> None:
-        if self.on_start:
-            self.on_start()
-
     def step(self, delta_t: float) -> None:
-        if self.on_step:
-            self.on_step(delta_t)
+        self.__handle_event__("step", delta_t)
 
     @staticmethod
     def create_sprite() -> pygame.Surface:
@@ -103,35 +114,19 @@ class Agent(object):
         else:
             return self.polygon.translate_rotate(translation=self.state.location, rotation=self.state.direction)
 
-    def get_sprite(self) -> pygame.Surface:
-        rotated_sprite = pygame.transform.rotate(self.sprite, self._state.direction)
-        return rotated_sprite
-
-    def get_observation(self) -> dict:
-        if self.model:
-            return self.model.get_observation(agent_name=self.name)
-        else:
-            return None
-
-    def get_stats(self) -> dict:
-        stats = {}
-        dist = 0
-        prev_state = self.trajectory[0]
-        for state in self.trajectory[1:]:
-            dist += Point.distance(src=prev_state.location, dst=state.location)
-            prev_state = state
-        stats["distance"] = dist
-        return stats
-
     def render(self,
                surface: pygame.Surface,
                coordinate_converter: CoordinateConverter):
         if self.visible:
-            agent_sprite: pygame.Surface = self.get_sprite()
-            width, height = agent_sprite.get_size()
-            screen_x, screen_y = coordinate_converter.from_canonical(self.state.location)
-            surface.blit(agent_sprite, (screen_x - width / 2, screen_y - height / 2))
-
-    def set_coordinate_converter(self,
-                                 coordinate_converter: CoordinateConverter):
-        self.coordinate_converter = coordinate_converter
+            if self.render_mode == Agent.RenderMode.SPRITE:
+                if self.sprite is None:
+                    sprite_size = coordinate_converter.scale_from_canonical(self.size) * self.sprite_scale
+                    self.sprite = pygame.transform.scale(self.create_sprite(), (sprite_size, sprite_size))
+                rotated_sprite = pygame.transform.rotate(self.sprite, self._state.direction)
+                width, height = rotated_sprite.get_size()
+                screen_x, screen_y = coordinate_converter.from_canonical(self.state.location)
+                surface.blit(rotated_sprite, (screen_x - width / 2, screen_y - height / 2))
+            else:
+                self.get_polygon().render(surface=surface,
+                                          coordinate_converter=coordinate_converter,
+                                          color=self.polygon_color)

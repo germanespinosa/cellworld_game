@@ -1,3 +1,4 @@
+import os
 from .view import View
 from .model import Model
 import pygame
@@ -13,8 +14,10 @@ def save_video_output(model: Model,
     view: View = model.view
     view.gameplay_frames = []
 
-    def before_stop():
-        import os
+    if not os.path.exists(video_folder):
+        os.makedirs(video_folder, exist_ok=True)
+
+    def before_stop(*args):
         video_file = os.path.join(video_folder, f"episode_{model.episode_count:03}.mp4")
         print(f"saving video file {video_file}")
         if view.gameplay_frames:
@@ -33,5 +36,5 @@ def save_video_output(model: Model,
         frame = np.flipud(frame)
         view.gameplay_frames.append(frame)
 
-    view.on_frame = on_frame
-    model.before_stop = before_stop
+    view.add_event_handler("frame", on_frame)
+    model.add_event_handler("before_stop", before_stop)

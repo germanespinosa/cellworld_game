@@ -1,4 +1,3 @@
-import pulsekit
 import time
 import typing
 import shapely as sp
@@ -13,13 +12,15 @@ class Model(object):
                  world_name: str,
                  arena: Polygon,
                  occlusions: typing.List[Polygon],
+                 time_step: float = 0.1,
                  real_time: bool = False,
-                 time_step: float = 0.1):
+                 render: bool = False):
         self.world_name = world_name
         self.arena = arena
         self.occlusions = occlusions
-        self.real_time = real_time
         self.time_step = time_step
+        self.real_time = real_time
+        self.render = render
         self.agents: typing.Dict[str, Agent] = {}
         self.visibility = Visibility(arena=self.arena, occlusions=self.occlusions)
         self.last_step = None
@@ -27,15 +28,73 @@ class Model(object):
         self.running = False
         self.episode_count = 0
         self.step_count = 0
-        self.before_step = None
-        self.after_step = None
-        self.before_stop = None
-        self.after_stop = None
-        self.before_reset = None
-        self.after_reset = None
-        self.on_close = None
         self.view: typing.Optional["View"] = None
         self.paused = False
+        self.event_handlers: typing.Dict[str, typing.List[typing.Callable]] = {"before_step": [], "after_step": [],
+                                                                               "before_stop": [], "after_stop": [],
+                                                                               "before_reset": [], "after_reset": [],
+                                                                               "close": [], "update_agents_polygons": [],
+                                                                               "pause": [], "update_agents_visibilities": []}
+        self.agents_visibility: typing.Dict[str, typing.Dict[str, typing.Union[IPolygon, typing.Dict[str, bool]]]] = {}
+        self.agents_polygons: typing.Dict[str, Polygon] = {}
+        if self.render:
+            self.occlusion_color = (50, 50, 50)
+            self.arena_color = (210, 210, 210)
+            self.visibility_color = (255, 255, 255)
+            from .view import View
+            self.view = View(model=self)
+            self.view.add_event_handler("quit", self.close)
+
+            def render_occlusions(surface, coordinate_converter):
+                for occlusion in self.occlusions:
+                    occlusion.render(surface=surface,
+                                     coordinate_converter=coordinate_converter,
+                                     color=self.occlusion_color)
+
+            def render_arena(surface, coordinate_converter):
+                self.arena.render(surface=surface,
+                                  coordinate_converter=coordinate_converter,
+                                  color=self.arena_color)
+
+            self.view.add_render_step(render_step=render_arena, z_index=0)
+            self.view.add_render_step(render_step=render_occlusions, z_index=30)
+
+            self.agent_render_mode = Agent.RenderMode.SPRITE
+            self.render_agent_visibility = ""
+
+            def render_visibility(surface, coordinate_converter):
+                if self.render_agent_visibility == "":
+                    return
+                visibility_polygon = self.agents_visibility[self.render_agent_visibility]["polygon"]
+                visibility_polygon.render(surface=surface,
+                                          coordinate_converter=coordinate_converter,
+                                          color=self.visibility_color)
+
+            def key_down(key):
+                import pygame
+                if key == pygame.K_r:
+                    if self.agent_render_mode == Agent.RenderMode.SPRITE:
+                        self.agent_render_mode = Agent.RenderMode.POLYGON
+                    else:
+                        self.agent_render_mode = Agent.RenderMode.SPRITE
+                    for agent_name, agent in self.agents.items():
+                        agent.render_mode = self.agent_render_mode
+                elif key == pygame.K_v:
+                    agent_names = list(self.agents.keys())
+                    if self.render_agent_visibility == "":
+                        self.render_agent_visibility = agent_names[0]
+                    else:
+                        current_agent = agent_names.index(self.render_agent_visibility)
+                        if current_agent == len(agent_names) - 1:
+                            self.render_agent_visibility = ""
+                        else:
+                            self.render_agent_visibility = agent_names[current_agent + 1]
+                elif key == pygame.K_p:
+                    self.pause()
+
+            self.view.add_render_step(render_visibility, z_index=20)
+
+            self.view.add_event_handler("key_down", key_down)
 
     def set_agents_state(self, agents_state: typing.Dict[str, AgentState],
                          delta_t: float = 0):
@@ -44,43 +103,68 @@ class Model(object):
                 self.agents[agent_name].set_state(agent_state)
         self.__update_state__(delta_t)
 
+    def add_event_handler(self, event_name: str, handler: typing.Callable):
+        if event_name not in self.event_handlers:
+            raise "Event handler not registered"
+        self.event_handlers[event_name].append(handler)
+
+    def __handle_event__(self, event_name: str, *args):
+        for event_handler in self.event_handlers[event_name]:
+            event_handler(*args)
+
     def __update_state__(self,
                          delta_t: float = 0):
         pass
 
+    def __update_agents_visibilities__(self):
+        for agent_name, agent in self.agents.items():
+            agent_visibility_polygon = self.visibility.get_visibility_polygon(src=agent.state.location,
+                                                                              direction=agent.state.direction,
+                                                                              view_field=agent.view_field)
+            self.agents_visibility[agent_name]["polygon"] = agent_visibility_polygon
+            for other_agent_name, other_agent_polygon in self.agents_polygons.items():
+                if agent_name != other_agent_name:
+                    self.agents_visibility[agent_name]["agents"][other_agent_name] = agent_visibility_polygon.contains(other_agent_polygon)
+        self.__handle_event__("update_agents_visibilities", self.agents_visibility)
+
+    def __update_agents_polygons__(self):
+        for agent_name, agent in self.agents.items():
+            self.agents_polygons[agent_name] = agent.get_polygon()
+        self.__handle_event__("update_agents_polygons", self.agents_polygons)
+
     def pause(self):
         self.paused = not self.paused
+        self.__handle_event__("pause", self)
 
     def add_agent(self, name: str, agent: Agent):
         self.agents[name] = agent
         agent.name = name
         agent.model = self
+        self.agents_polygons[name] = None
+        self.agents_visibility[name] = {"polygon": None, "agents": {}}
+        if self.render:
+            self.view.add_render_step(agent.render, z_index=100)
 
     def reset(self):
         if self.running:
             self.stop()
-        if self.before_reset is not None:
-            self.before_reset()
+        self.__handle_event__("before_reset", self)
         self.running = True
         self.episode_count += 1
         for name, agent in self.agents.items():
             agent.reset()
-        observations = self.get_observations()
-        for name, agent in self.agents.items():
-            agent.start()
         self.last_step = time.time()
         self.step_count = 0
-        if self.after_reset is not None:
-            self.after_reset()
+        self.__update_agents_polygons__()
+        self.__update_agents_visibilities__()
+        self.__handle_event__("after_reset", self)
 
     def stop(self):
         if not self.running:
             return
-        if self.before_stop is not None:
-            self.before_stop()
+        self.__handle_event__("before_stop", self)
         self.running = False
-        if self.after_stop is not None:
-            self.after_stop()
+        self.__handle_event__("after_stop", self)
 
     def is_valid_state(self, agent_polygon: sp.Polygon, collisions: bool) -> bool:
         if not self.arena.contains(agent_polygon):
@@ -91,60 +175,6 @@ class Model(object):
                     return False
         return True
 
-    def get_observations(self):
-        agent_visibility = {src_name: {dst_name: None for dst_name in self.agents} for src_name in self.agents}
-        observations = {}
-        for src_name, src_agent in self.agents.items():
-            observations[src_name] = {}
-            for dst_name, dst_agent in self.agents.items():
-                if agent_visibility[src_name][dst_name] is None:
-                    if src_name == dst_name:
-                        is_visible = True
-                    else:
-                        is_visible = self.visibility.line_of_sight(src=src_agent.state.location,
-                                                                   dst=dst_agent.state.location)
-                    agent_visibility[src_name][dst_name] = is_visible
-                    agent_visibility[dst_name][src_name] = is_visible
-            observations[src_name]["agent_states"] = {}
-            for dst_name, is_visible in agent_visibility.items():
-                if is_visible:
-                    observations[src_name]["agent_states"][dst_name] = self.agents[dst_name].state.location, self.agents[dst_name].state.direction
-                else:
-                    observations[src_name]["agent_states"][dst_name] = None
-        return observations
-
-    def get_observation(self,
-                        agent_name: str,
-                        polygonal: bool = False) -> dict:
-        observation = {}
-        src_point = sp.Point(self.agents[agent_name].state.location)
-        if polygonal:
-            visibility_polygon = self.visibility.get_visibility_polygon(src_point.state.location, src_point.state.direction)
-        else:
-            walls_by_distance = self.visibility.walls_by_distance(src=src_point)
-        parsed_walls = []
-        for wall_number, vertices, distance in walls_by_distance:
-            parsed_walls.append((distance, self.wall_direction(src=src_point, wall_number=wall_number)))
-        observation["walls"] = parsed_walls
-        observation["agent_states"] = {}
-        for dst_name, dst_agent in self.agents.items():
-            if agent_name == dst_name:
-                is_visible = True
-            else:
-                dst_point = sp.Point(dst_agent.state.location)
-                if polygonal:
-                    dst_polygon = dst_agent.get_polygon()
-                    is_visible = dst_polygon.intersects(visibility_polygon)
-                else:
-                    is_visible = self.visibility.line_of_sight(src=src_point,
-                                                               dst=dst_point,
-                                                               walls_by_distance=walls_by_distance)
-            if is_visible:
-                observation["agent_states"][dst_name] = self.agents[dst_name].state.location, self.agents[dst_name].state.direction
-            else:
-                observation["agent_states"][dst_name] = None
-        return observation
-
     def step(self) -> float:
         if not self.running:
             return 0
@@ -152,54 +182,46 @@ class Model(object):
         if self.paused:
             return 0
 
-        with pulsekit.CodeBlock("model.before_step"):
-            if self.before_step is not None:
-                self.before_step()
+        self.__handle_event__("before_step", self)
 
-        with pulsekit.CodeBlock("model.real_time_wait"):
-            if self.real_time:
-                while self.last_step + self.time_step > time.time():
-                    pass
+        if self.real_time:
+            while self.last_step + self.time_step > time.time():
+                pass
 
-        with pulsekit.CodeBlock("model.step"):
-            self.last_step = time.time()
-            with pulsekit.CodeBlock("update_agents_state"):
-                for name, agent in self.agents.items():
-                    dynamics = agent.dynamics
-                    distance, rotation = dynamics.change(delta_t=self.time_step)
-                    new_state = agent.state.update(rotation=rotation,
+        self.last_step = time.time()
+        for name, agent in self.agents.items():
+            dynamics = agent.dynamics
+            distance, rotation = dynamics.change(delta_t=self.time_step)
+            new_state = agent.state.update(rotation=rotation,
+                                           distance=distance)
+            agent_polygon = agent.get_polygon(state=new_state)
+            if self.is_valid_state(agent_polygon=agent_polygon,
+                                   collisions=agent.collision):
+                agent.set_state(state=new_state)
+            else: #try only rotation
+                new_state = agent.state.update(rotation=rotation,
+                                               distance=0)
+                agent_polygon = agent.get_polygon(state=new_state)
+                if self.is_valid_state(agent_polygon=agent_polygon,
+                                       collisions=agent.collision):
+                    agent.set_state(state=new_state)
+                else: #try only translation
+                    new_state = agent.state.update(rotation=0,
                                                    distance=distance)
                     agent_polygon = agent.get_polygon(state=new_state)
                     if self.is_valid_state(agent_polygon=agent_polygon,
                                            collisions=agent.collision):
                         agent.set_state(state=new_state)
-                    else: #try only rotation
-                        new_state = agent.state.update(rotation=rotation,
-                                                       distance=0)
-                        agent_polygon = agent.get_polygon(state=new_state)
-                        if self.is_valid_state(agent_polygon=agent_polygon,
-                                               collisions=agent.collision):
-                            agent.set_state(state=new_state)
-                        else: #try only translation
-                            new_state = agent.state.update(rotation=0,
-                                                           distance=distance)
-                            agent_polygon = agent.get_polygon(state=new_state)
-                            if self.is_valid_state(agent_polygon=agent_polygon,
-                                                   collisions=agent.collision):
-                                agent.set_state(state=new_state)
-            with pulsekit.CodeBlock("agent_steps"):
-                for name, agent in self.agents.items():
-                    agent.step(delta_t=self.time_step)
-            self.time += self.time_step
-            self.step_count += 1
-
-        with pulsekit.CodeBlock("model.after_step"):
-            if self.after_step is not None:
-                self.after_step()
+        self.__update_agents_polygons__()
+        self.__update_agents_visibilities__()
+        for name, agent in self.agents.items():
+            agent.step(delta_t=self.time_step)
+        self.time += self.time_step
+        self.step_count += 1
+        self.__handle_event__("after_step", self)
         return self.time_step
 
     def close(self):
         if self.running:
             self.stop()
-        if self.on_close:
-            self.on_close()
+        self.__handle_event__("close", self)

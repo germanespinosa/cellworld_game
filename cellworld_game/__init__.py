@@ -12,3 +12,4 @@ from .tasks import BotEvade, Oasis, DualEvade
 from .video import save_video_output
 from .polygon import Polygon
 from .points import Points
+from .log import save_log_output

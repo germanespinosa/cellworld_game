@@ -8,15 +8,21 @@ from .resources import Resources
 from .polygon import Polygon
 from .util import Point
 
+
 class Robot(NavigationAgent):
     def __init__(self,
                  start_locations: typing.List[Point.type],
                  open_locations: typing.List[Point.type],
-                 navigation: Navigation):
+                 navigation: Navigation,
+                 view_field: float = 360):
         NavigationAgent.__init__(self,
                                  navigation=navigation,
                                  max_forward_speed=0.075,
-                                 max_turning_speed=3.5)
+                                 max_turning_speed=3.5,
+                                 view_field=view_field,
+                                 size=.05,
+                                 sprite_scale=1.9,
+                                 polygon_color=(90, 20, 20))
         self.start_locations = start_locations
         self.open_locations = open_locations
         self.last_destination_time = 0

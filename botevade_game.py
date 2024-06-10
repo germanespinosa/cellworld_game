@@ -6,7 +6,7 @@ bot_evade = BotEvade(world_name="21_05",
                      puff_threshold=.1,
                      goal_threshold=.05,
                      time_step=.025,
-                     real_time=True,
+                     real_time=False,
                      render=True,
                      use_predator=True)
 

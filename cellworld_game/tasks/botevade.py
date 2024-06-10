@@ -23,7 +23,6 @@ class BotEvade(Model):
         self.puff_threshold = puff_threshold
         self.goal_location = goal_location
         self.goal_threshold = goal_threshold
-        self.render = render
         self.loader = CellWorldLoader(world_name=world_name)
 
         Model.__init__(self,
@@ -31,7 +30,8 @@ class BotEvade(Model):
                        arena=self.loader.arena,
                        occlusions=self.loader.occlusions,
                        time_step=time_step,
-                       real_time=real_time)
+                       real_time=real_time,
+                       render=render)
 
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
@@ -49,10 +49,6 @@ class BotEvade(Model):
         self.running = False
 
         if self.render:
-            from ..view import View
-            self.view = View(model=self)
-            self.view.on_quit = self.__on_quit__
-
             if use_predator:
                 import pygame
 
@@ -90,7 +86,7 @@ class BotEvade(Model):
         if self.use_predator and self.puff_cool_down <= 0:
             self.predator_prey_distance = Point.distance(src=self.prey.state.location,
                                                          dst=self.predator.state.location)
-            self.predator_visible = self.visibility.line_of_sight(self.prey.state.location, self.predator.state.location)
+            self.predator_visible = self.agents_visibility["prey"]["agents"]["predator"]
             if self.predator_visible:
                 if self.predator_prey_distance <= self.puff_threshold:
                     self.puffed = True

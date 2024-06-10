@@ -41,7 +41,6 @@ class DualEvade(Model):
         self.puff_threshold = puff_threshold
         self.goal_location = goal_location
         self.goal_threshold = goal_threshold
-        self.render = render
         self.loader = CellWorldLoader(world_name=world_name)
 
         Model.__init__(self,
@@ -49,7 +48,8 @@ class DualEvade(Model):
                        arena=self.loader.arena,
                        occlusions=self.loader.occlusions,
                        time_step=time_step,
-                       real_time=real_time)
+                       real_time=real_time,
+                       render=render)
 
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
@@ -71,10 +71,6 @@ class DualEvade(Model):
         self.add_agent("prey_2", self.prey_2)
 
         if self.render:
-            from ..view import View
-            self.view = View(model=self)
-            self.view.on_quit = self.__on_quit__
-
             if use_predator:
                 import pygame
 
