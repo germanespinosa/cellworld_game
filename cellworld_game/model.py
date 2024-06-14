@@ -4,9 +4,11 @@ import shapely as sp
 from .agent import Agent, AgentState
 from .visibility import Visibility
 from .polygon import Polygon
+from .event import EventDispatcher
+from .line_of_sight import LineOfSight
 
 
-class Model(object):
+class Model(EventDispatcher):
 
     def __init__(self,
                  world_name: str,
@@ -24,19 +26,22 @@ class Model(object):
         self.agents: typing.Dict[str, Agent] = {}
         self.visibility = Visibility(arena=self.arena, occlusions=self.occlusions)
         self.last_step = None
-        self.time = 0
+        self.time: float = 0
         self.running = False
         self.episode_count = 0
         self.step_count = 0
         self.view: typing.Optional["View"] = None
         self.paused = False
-        self.event_handlers: typing.Dict[str, typing.List[typing.Callable]] = {"before_step": [], "after_step": [],
-                                                                               "before_stop": [], "after_stop": [],
-                                                                               "before_reset": [], "after_reset": [],
-                                                                               "close": [], "update_agents_polygons": [],
-                                                                               "pause": [], "update_agents_visibilities": []}
-        self.agents_visibility: typing.Dict[str, typing.Dict[str, typing.Union[IPolygon, typing.Dict[str, bool]]]] = {}
-        self.agents_polygons: typing.Dict[str, Polygon] = {}
+        self.line_of_sight = LineOfSight()
+        EventDispatcher.__init__(self, ["before_step",
+                                        "after_step",
+                                        "before_stop",
+                                        "after_stop",
+                                        "before_reset",
+                                        "after_reset",
+                                        "agents_states_update",
+                                        "close",
+                                        "pause"])
         if self.render:
             self.occlusion_color = (50, 50, 50)
             self.arena_color = (210, 210, 210)
@@ -65,7 +70,7 @@ class Model(object):
             def render_visibility(surface, coordinate_converter):
                 if self.render_agent_visibility == "":
                     return
-                visibility_polygon = self.agents_visibility[self.render_agent_visibility]["polygon"]
+                visibility_polygon = self.agents[self.render_agent_visibility].visibility_polygon
                 visibility_polygon.render(surface=surface,
                                           coordinate_converter=coordinate_converter,
                                           color=self.visibility_color)
@@ -91,80 +96,77 @@ class Model(object):
                             self.render_agent_visibility = agent_names[current_agent + 1]
                 elif key == pygame.K_p:
                     self.pause()
+                elif key == pygame.K_n:
+                    for agent_name, agent in self.agents.items():
+                        if hasattr(agent, "render_path"):
+                            agent.render_path = not agent.render_path
 
             self.view.add_render_step(render_visibility, z_index=20)
 
             self.view.add_event_handler("key_down", key_down)
 
-    def set_agents_state(self, agents_state: typing.Dict[str, AgentState],
+    def set_agents_state(self,
+                         agents_state: typing.Dict[str, AgentState],
+                         agents_body_polygons: typing.Dict[str, Polygon] = None,
                          delta_t: float = 0):
         for agent_name, agent_state in agents_state.items():
-            if agent_name in self.agents:
-                self.agents[agent_name].set_state(agent_state)
-        self.__update_state__(delta_t)
+            agent = self.agents[agent_name]
+            agent.state = agent_state
+            if agents_body_polygons:
+                agent.body_polygon = agents_body_polygons[agent_name]
+            else:
+                agent.body_polygon = agent.get_body_polygon(state=agent_state)
 
-    def add_event_handler(self, event_name: str, handler: typing.Callable):
-        if event_name not in self.event_handlers:
-            raise "Event handler not registered"
-        self.event_handlers[event_name].append(handler)
-
-    def __handle_event__(self, event_name: str, *args):
-        for event_handler in self.event_handlers[event_name]:
-            event_handler(*args)
-
-    def __update_state__(self,
-                         delta_t: float = 0):
-        pass
-
-    def __update_agents_visibilities__(self):
-        for agent_name, agent in self.agents.items():
-            agent_visibility_polygon = self.visibility.get_visibility_polygon(src=agent.state.location,
-                                                                              direction=agent.state.direction,
+            agent.visibility_polygon = self.visibility.get_visibility_polygon(src=agent_state.location,
+                                                                              direction=agent_state.direction,
                                                                               view_field=agent.view_field)
-            self.agents_visibility[agent_name]["polygon"] = agent_visibility_polygon
-            for other_agent_name, other_agent_polygon in self.agents_polygons.items():
-                if agent_name != other_agent_name:
-                    self.agents_visibility[agent_name]["agents"][other_agent_name] = agent_visibility_polygon.contains(other_agent_polygon)
-        self.__handle_event__("update_agents_visibilities", self.agents_visibility)
 
-    def __update_agents_polygons__(self):
+            self.__dispatch__(f"agent_{agent_name}_state_update", agent_state)
+
         for agent_name, agent in self.agents.items():
-            self.agents_polygons[agent_name] = agent.get_polygon()
-        self.__handle_event__("update_agents_polygons", self.agents_polygons)
+            agent_visibility_polygon = self.agents[agent_name].visibility_polygon
+            for other_agent_name, other_agent in self.agents.items():
+                if other_agent_name != agent_name:
+                    self.line_of_sight[agent_name, other_agent_name] = agent_visibility_polygon.intersects(other_agent.body_polygon)
+        self.__dispatch__("agents_states_update", agents_state, self.line_of_sight)
 
     def pause(self):
         self.paused = not self.paused
-        self.__handle_event__("pause", self)
+        self.__dispatch__("pause", self)
 
     def add_agent(self, name: str, agent: Agent):
-        self.agents[name] = agent
         agent.name = name
         agent.model = self
-        self.agents_polygons[name] = None
-        self.agents_visibility[name] = {"polygon": None, "agents": {}}
+        self.register_event(f"agent_{name}_state_update")
+        self.line_of_sight.register_agent(agent=agent)
+        self.agents[name] = agent
         if self.render:
             self.view.add_render_step(agent.render, z_index=100)
 
     def reset(self):
         if self.running:
             self.stop()
-        self.__handle_event__("before_reset", self)
+        self.__dispatch__("before_reset", self)
         self.running = True
         self.episode_count += 1
+        agents_state: typing.Dict[str, AgentState] = {}
+        agents_body_polygon: typing.Dict[str, Polygon] = {}
         for name, agent in self.agents.items():
-            agent.reset()
+            agent_state = agent.reset()
+            agents_state[name] = agent_state
+            agents_body_polygon[name] = agent.get_body_polygon(state=agent_state)
+
+        self.set_agents_state(agents_state=agents_state)
         self.last_step = time.time()
         self.step_count = 0
-        self.__update_agents_polygons__()
-        self.__update_agents_visibilities__()
-        self.__handle_event__("after_reset", self)
+        self.__dispatch__("after_reset", self)
 
     def stop(self):
         if not self.running:
             return
-        self.__handle_event__("before_stop", self)
+        self.__dispatch__("before_stop", self)
         self.running = False
-        self.__handle_event__("after_stop", self)
+        self.__dispatch__("after_stop", self)
 
     def is_valid_state(self, agent_polygon: sp.Polygon, collisions: bool) -> bool:
         if not self.arena.contains(agent_polygon):
@@ -182,46 +184,49 @@ class Model(object):
         if self.paused:
             return 0
 
-        self.__handle_event__("before_step", self)
+        self.__dispatch__("before_step", self)
 
         if self.real_time:
             while self.last_step + self.time_step > time.time():
                 pass
 
         self.last_step = time.time()
+        new_states: typing.Dict[str, AgentState] = {}
+        new_body_polygons: typing.Dict[str, Polygon] = {}
         for name, agent in self.agents.items():
             dynamics = agent.dynamics
             distance, rotation = dynamics.change(delta_t=self.time_step)
             new_state = agent.state.update(rotation=rotation,
                                            distance=distance)
-            agent_polygon = agent.get_polygon(state=new_state)
-            if self.is_valid_state(agent_polygon=agent_polygon,
-                                   collisions=agent.collision):
-                agent.set_state(state=new_state)
-            else: #try only rotation
+            agent_polygon = agent.get_body_polygon(state=new_state)
+            if not self.is_valid_state(agent_polygon=agent_polygon,
+                                       collisions=agent.collision): #try only rotation
                 new_state = agent.state.update(rotation=rotation,
                                                distance=0)
-                agent_polygon = agent.get_polygon(state=new_state)
-                if self.is_valid_state(agent_polygon=agent_polygon,
-                                       collisions=agent.collision):
-                    agent.set_state(state=new_state)
-                else: #try only translation
+                agent_polygon = agent.get_body_polygon(state=new_state)
+                if not self.is_valid_state(agent_polygon=agent_polygon,
+                                           collisions=agent.collision): #try only translation
                     new_state = agent.state.update(rotation=0,
                                                    distance=distance)
-                    agent_polygon = agent.get_polygon(state=new_state)
-                    if self.is_valid_state(agent_polygon=agent_polygon,
-                                           collisions=agent.collision):
-                        agent.set_state(state=new_state)
-        self.__update_agents_polygons__()
-        self.__update_agents_visibilities__()
+                    agent_polygon = agent.get_body_polygon(state=new_state)
+                    if not self.is_valid_state(agent_polygon=agent_polygon,
+                                               collisions=agent.collision):
+                        new_state = agent.state
+                        agent_polygon = agent.body_polygon
+            new_states[name] = new_state
+            new_body_polygons[name] = agent_polygon
+        self.set_agents_state(agents_state=new_states, agents_body_polygons=new_body_polygons)
         for name, agent in self.agents.items():
             agent.step(delta_t=self.time_step)
         self.time += self.time_step
         self.step_count += 1
-        self.__handle_event__("after_step", self)
+        self.__dispatch__("after_step", self)
         return self.time_step
 
     def close(self):
         if self.running:
             self.stop()
-        self.__handle_event__("close", self)
+        self.__dispatch__("close", self)
+
+    def __del__(self):
+        self.close()

@@ -1,5 +1,5 @@
 import random
-from cellworld_game import BotEvade, save_video_output
+from cellworld_game import BotEvade, save_video_output, save_log_output
 
 bot_evade = BotEvade(world_name="21_05",
                      puff_cool_down_time=.5,
@@ -11,6 +11,7 @@ bot_evade = BotEvade(world_name="21_05",
                      use_predator=True)
 
 save_video_output(bot_evade, "videos")
+save_log_output(bot_evade, "test", "logs")
 
 bot_evade.view.agent_perspective = 1
 

@@ -33,6 +33,8 @@ class BotEvade(Model):
                        real_time=real_time,
                        render=render)
 
+        self.register_event(event_name="puff")
+
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
                                   open_locations=self.loader.open_locations,
@@ -86,12 +88,13 @@ class BotEvade(Model):
         if self.use_predator and self.puff_cool_down <= 0:
             self.predator_prey_distance = Point.distance(src=self.prey.state.location,
                                                          dst=self.predator.state.location)
-            self.predator_visible = self.agents_visibility["prey"]["agents"]["predator"]
+            self.predator_visible = self.line_of_sight["prey"]["predator"]
             if self.predator_visible:
                 if self.predator_prey_distance <= self.puff_threshold:
                     self.puffed = True
                     self.puff_count += 1
                     self.puff_cool_down = self.puff_cool_down_time
+                    self.__dispatch__("puff", self)
 
                 self.predator.set_destination(self.prey.state.location)
 

@@ -29,8 +29,7 @@ class Robot(NavigationAgent):
 
     def reset(self):
         NavigationAgent.reset(self)
-        self.set_state(AgentState(location=random.choice(self.start_locations),
-                                  direction=180))
+        return AgentState(location=random.choice(self.start_locations), direction=180)
 
     @staticmethod
     def create_sprite() -> pygame.Surface:
@@ -39,7 +38,7 @@ class Robot(NavigationAgent):
         return rotated_sprite
 
     @staticmethod
-    def create_polygon() -> Polygon:
+    def create_body_polygon() -> Polygon:
         return Polygon([(.02, 0.013), (-.02, 0.013), (-.02, -0.013), (.02, -0.013), (.025, -0.01), (.025, 0.01)])
 
     def step(self, delta_t: float):

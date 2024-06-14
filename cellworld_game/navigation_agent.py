@@ -6,6 +6,7 @@ from .coordinate_converter import CoordinateConverter
 from .navigation import Navigation
 import typing
 
+
 class NavigationAgent(Agent):
 
     def __init__(self,
@@ -28,6 +29,7 @@ class NavigationAgent(Agent):
         self.navigation_plan_update_wait = 0
         self.destination_wait = 0
         self.path = []
+        self.render_path = False
         Agent.__init__(self,
                        view_field=view_field,
                        size=size,
@@ -100,21 +102,22 @@ class NavigationAgent(Agent):
     def render(self,
                surface: pygame.Surface,
                coordinate_converter: CoordinateConverter):
-        current_point = self.state.location
-        for step in self.path:
-            if step is None:
-                continue
-            pygame.draw.line(surface,
-                             (255, 0, 0),
-                             coordinate_converter.from_canonical(current_point),
-                             coordinate_converter.from_canonical(step),
-                             2)
-            pygame.draw.circle(surface=surface,
-                               color=(0, 0, 255),
-                               center=coordinate_converter.from_canonical(step),
-                               radius=5,
-                               width=2)
-            current_point = step
+        if self.render_path:
+            current_point = self.state.location
+            for step in self.path:
+                if step is None:
+                    continue
+                pygame.draw.line(surface,
+                                 (255, 0, 0),
+                                 coordinate_converter.from_canonical(current_point),
+                                 coordinate_converter.from_canonical(step),
+                                 2)
+                pygame.draw.circle(surface=surface,
+                                   color=(0, 0, 255),
+                                   center=coordinate_converter.from_canonical(step),
+                                   radius=5,
+                                   width=2)
+                current_point = step
         Agent.render(self=self,
                      surface=surface,
                      coordinate_converter=coordinate_converter)

@@ -79,20 +79,7 @@ class Polygon(IPolygon):
         return inside
 
     def intersects(self, other: "Polygon"):
-        # Calculate edges and axes for both polygons
-        edges = torch.cat([self.edges, other.edges], dim=0)
-        axes = torch.cat([-edges[:, 1].unsqueeze(1), edges[:, 0].unsqueeze(1)], dim=1)
-        axes = axes / torch.norm(axes, dim=1, keepdim=True)
-
-        # Project both polygons onto each axis
-        projections1 = torch.matmul(self.vertices, axes.T)
-        min1, max1 = projections1.min(dim=0)[0], projections1.max(dim=0)[0]
-
-        projections2 = torch.matmul(self.vertices, axes.T)
-        min2, max2 = projections2.min(dim=0)[0], projections2.max(dim=0)[0]
-        # Check for separation along any axis
-        separated = (max1 < min2) | (max2 < min1)
-        return not separated.any()
+        return self.contains(points=other.vertices).any()
 
     def __getitem__(self, item) -> typing.Tuple[float, float]:
         return tuple(self.vertices[item, :].tolist())

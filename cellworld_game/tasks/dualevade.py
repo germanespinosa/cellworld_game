@@ -50,7 +50,6 @@ class DualEvade(Model):
                        time_step=time_step,
                        real_time=real_time,
                        render=render)
-
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
                                   open_locations=self.loader.open_locations,

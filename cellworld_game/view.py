@@ -4,6 +4,7 @@ import typing
 from .model import Model
 from .coordinate_converter import CoordinateConverter
 import colorsys
+from .event import EventDispatcher
 
 
 def generate_distinct_colors(n):
@@ -20,7 +21,7 @@ def generate_distinct_colors(n):
     return colors
 
 
-class View(object):
+class View(EventDispatcher):
     def __init__(self,
                  model: Model,
                  screen_width: int = 800,
@@ -37,26 +38,17 @@ class View(object):
         self.background_color = (0, 0, 0)
         self.clock = pygame.time.Clock()
         self.show_sprites = True
-        self.event_handlers: typing.Dict[str, typing.List[typing.Callable]] = {"mouse_button_down": [],
-                                                                               "mouse_button_up": [],
-                                                                               "mouse_move": [],
-                                                                               "mouse_wheel": [],
-                                                                               "key_down": [self.on_key_down],
-                                                                               "key_up": [],
-                                                                               "quit": [],
-                                                                               "frame": []}
+        EventDispatcher.__init__(self, ["mouse_button_down",
+                                        "mouse_button_up",
+                                        "mouse_move",
+                                        "mouse_wheel",
+                                        "key_down",
+                                        "key_up",
+                                        "quit",
+                                        "frame"])
         self.pressed_keys = pygame.key.get_pressed()
         self.draw = self.render
         self.visibility_location = (.5, .5)
-
-    def __handle_event__(self, event_name: str, *args):
-        for event_handler in self.event_handlers[event_name]:
-            event_handler(*args)
-
-    def add_event_handler(self, event_name: str, handler: typing.Callable):
-        if event_name not in self.event_handlers:
-            raise KeyError(f'Event handler "{event_name}" not registered')
-        self.event_handlers[event_name].append(handler)
 
     def add_render_step(self,
                         render_step: typing.Callable[[pygame.Surface, CoordinateConverter], None],
@@ -75,29 +67,29 @@ class View(object):
             render_step = self.render_steps[render_step_number]
             render_step(self.screen, self.coordinate_converter)
         self.__process_events__()
-        self.__handle_event__("frame", self.screen, self.coordinate_converter)
+        self.__dispatch__("frame", self.screen, self.coordinate_converter)
         pygame.display.flip()
 
     def __process_events__(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.__handle_event__("quit")
+                self.__dispatch__("quit")
             if event.type == pygame.MOUSEBUTTONDOWN:
                 canonical_x_y = self.coordinate_converter.to_canonical(event.pos)
-                self.__handle_event__("mouse_button_down", canonical_x_y)
+                self.__dispatch__("mouse_button_down", canonical_x_y)
             elif event.type == pygame.MOUSEBUTTONUP:
                 canonical_x_y = self.coordinate_converter.to_canonical(event.pos)
-                self.__handle_event__("mouse_button_up", canonical_x_y)
+                self.__dispatch__("mouse_button_up", canonical_x_y)
             elif event.type == pygame.MOUSEMOTION:
                 canonical_x_y = self.coordinate_converter.to_canonical(event.pos)
-                self.__handle_event__("mouse_move", canonical_x_y)
+                self.__dispatch__("mouse_move", canonical_x_y)
             elif event.type == pygame.MOUSEWHEEL:
                 canonical_x_y = self.coordinate_converter.to_canonical((event.x, event.y))
-                self.__handle_event__("mouse_wheel", canonical_x_y)
+                self.__dispatch__("mouse_wheel", canonical_x_y)
             elif event.type == pygame.KEYDOWN:
-                self.__handle_event__("key_down", event.key)
+                self.__dispatch__("key_down", event.key)
             elif event.type == pygame.KEYUP:
-                self.__handle_event__("key_up", event.key)
+                self.__dispatch__("key_up", event.key)
         self.pressed_keys = pygame.key.get_pressed()
 
     def on_key_down(self, key):

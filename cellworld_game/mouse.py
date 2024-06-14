@@ -23,8 +23,7 @@ class Mouse(NavigationAgent):
 
     def reset(self):
         NavigationAgent.reset(self)
-        self.set_state(AgentState(location=self.start_state.location,
-                                  direction=self.start_state.direction))
+        return AgentState(location=self.start_state.location, direction=self.start_state.direction)
 
     @staticmethod
     def create_sprite() -> pygame.Surface:
@@ -33,6 +32,6 @@ class Mouse(NavigationAgent):
         return rotated_sprite
 
     @staticmethod
-    def create_polygon() -> Polygon:
+    def create_body_polygon() -> Polygon:
         return Polygon([(.015, 0), (0, 0.005), (-.015, 0), (0, -0.005)])
 

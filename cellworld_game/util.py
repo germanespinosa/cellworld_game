@@ -56,6 +56,8 @@ class Direction:
     @staticmethod
     def vector(src: typing.Tuple[float, float],
                dst: typing.Tuple[float, float]) -> typing.Tuple[float, float]:
+        if src == dst:
+            return 0, 0
         distance = Point.distance(src=src, dst=dst)
         return (dst[0] - src[0]) / distance, (dst[1] - src[1]) / distance
 
