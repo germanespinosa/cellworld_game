@@ -74,3 +74,6 @@ class Polygon(IPolygon):
         translated_polygon: spa.Polygon = spa.translate(rotated_polygon, delta_x, delta_y)
 
         return Polygon(vertices=translated_polygon.exterior.coords)
+
+    def area(self) -> float:
+        return self.polygon.area

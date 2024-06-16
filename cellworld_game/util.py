@@ -1,7 +1,6 @@
 import math
 import typing
 
-
 class Point(object):
 
     type = typing.Tuple[float, float]
@@ -90,3 +89,7 @@ class Direction:
     def error_normalization(direction_error: float):
         pi_err = direction_error / 8
         return 1 / (pi_err * pi_err + 1)
+
+
+class Line(object):
+    type = typing.Tuple[Point.type, Point.type]

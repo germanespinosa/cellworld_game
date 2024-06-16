@@ -5,7 +5,7 @@ from .resources import Resources
 from .robot import Robot
 from .mouse import Mouse
 from .navigation import Navigation
-from .util import Point, Direction
+from .util import Point, Direction, Line
 from .cellworld_loader import CellWorldLoader
 from .visibility import Visibility
 from .tasks import BotEvade, Oasis, DualEvade

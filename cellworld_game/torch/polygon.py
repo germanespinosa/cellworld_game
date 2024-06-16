@@ -100,3 +100,12 @@ class Polygon(IPolygon):
         rotated_points = torch.matmul(vertices, rotation_matrix)
         rotated_points += rc + t
         return Polygon(vertices=rotated_points)
+
+    def area(self) -> float:
+        # Extract x and y coordinates
+        x = self.vertices[:, 0]
+        y = self.vertices[:, 1]
+        # Apply the Shoelace formula
+        area = 0.5 * torch.abs(torch.sum(x[:-1] * y[1:]) + x[-1] * y[0] - torch.sum(y[:-1] * x[1:]) - y[-1] * x[0])
+        return float(area)
+    
