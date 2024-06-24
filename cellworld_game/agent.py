@@ -25,6 +25,9 @@ class AgentState(object):
                                               distance=distance),
                           direction=new_direction)
 
+    def copy(self) -> "AgentState":
+        return AgentState(location=self.location,direction=self.direction)
+
 
 class AgentDynamics(object):
     def __init__(self, forward_speed: float, turn_speed: float):

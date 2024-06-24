@@ -105,6 +105,12 @@ class Model(EventDispatcher):
 
             self.view.add_event_handler("key_down", key_down)
 
+    def get_agents_state(self) -> typing.Dict[str, AgentState]:
+        agents_state: typing.Dict[str, AgentState] = {}
+        for agent_name, agent in self.agents.items():
+            agents_state[agent_name] = agent.state.copy()
+        return agents_state
+
     def set_agents_state(self,
                          agents_state: typing.Dict[str, AgentState],
                          agents_body_polygons: typing.Dict[str, Polygon] = None,
