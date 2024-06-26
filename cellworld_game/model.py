@@ -149,20 +149,22 @@ class Model(EventDispatcher):
         if self.render:
             self.view.add_render_step(agent.render, z_index=100)
 
-    def reset(self):
+    def reset(self,
+              agents_state: typing.Dict[str, AgentState] = None):
         if self.running:
             self.stop()
         self.__dispatch__("before_reset", self)
         self.running = True
         self.episode_count += 1
-        agents_state: typing.Dict[str, AgentState] = {}
+        agents_start_state: typing.Dict[str, AgentState] = {}
         agents_body_polygon: typing.Dict[str, Polygon] = {}
         for name, agent in self.agents.items():
-            agent_state = agent.reset()
-            agents_state[name] = agent_state
+            agent_reset_state = agent.reset()
+            agent_state = agents_state[name] if agents_state and name in agents_state else agent_reset_state
+            agents_start_state[name] = agent_state
             agents_body_polygon[name] = agent.get_body_polygon(state=agent_state)
 
-        self.set_agents_state(agents_state=agents_state)
+        self.set_agents_state(agents_state=agents_start_state)
         self.last_step = time.time()
         self.step_count = 0
         self.__dispatch__("after_reset", self)

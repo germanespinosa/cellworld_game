@@ -36,6 +36,7 @@ class NavigationAgent(Agent):
                        sprite_scale=sprite_scale,
                        polygon_color=polygon_color)
         self.collision = False
+        self.active_navigation = True
 
     def next_step(self):
         if self.path:
@@ -50,10 +51,9 @@ class NavigationAgent(Agent):
         self.path = []
         Agent.reset(self)
 
-    def start(self):
-        Agent.start(self)
-
     def step(self, delta_t: float):
+        if self.active_navigation:
+            return
         with pulsekit.CodeBlock("navigation_agent.step"):
             if not self.running:
                 self.stop_navigation()
