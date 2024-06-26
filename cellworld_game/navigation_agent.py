@@ -52,7 +52,7 @@ class NavigationAgent(Agent):
         Agent.reset(self)
 
     def step(self, delta_t: float):
-        if self.active_navigation:
+        if not self.active_navigation:
             return
         with pulsekit.CodeBlock("navigation_agent.step"):
             if not self.running:
