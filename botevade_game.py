@@ -26,7 +26,7 @@ action_count = len(bot_evade.loader.full_action_list)
 
 while bot_evade.running:
     if bot_evade.time > last_destination_time + 2:
-        if bot_evade.goal_achieved or random_actions == 0:
+        if bot_evade.prey_data.goal_achieved or random_actions == 0:
             destination = bot_evade.goal_location
             random_actions = 10
         else:
