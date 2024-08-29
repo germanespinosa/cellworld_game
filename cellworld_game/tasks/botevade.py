@@ -9,6 +9,24 @@ from ..cellworld_loader import CellWorldLoader
 import enum
 
 
+class BotEvadePreyData:
+    def __init__(self):
+        self.puffed = False
+        self.goal_achieved = False
+        self.predator_visible = False
+        self.predator_prey_distance = 1
+        self.prey_goal_distance = 0
+        self.puff_count = 0
+
+    def reset(self):
+        self.puffed = False
+        self.goal_achieved = False
+        self.predator_visible = False
+        self.predator_prey_distance = 1
+        self.prey_goal_distance = 0
+        self.puff_count = 0
+
+
 class BotEvade(Model):
     class PointOfView(enum.Enum):
         TOP = ""
@@ -85,24 +103,19 @@ class BotEvade(Model):
                 if point_of_view == self.PointOfView.TOP:
                     self.view.add_render_step(render_puff_area, z_index=90)
 
-        self.puffed: bool = False
         self.puff_cool_down: float = 0
-        self.goal_achieved: bool = False
-        self.predator_prey_distance: float = 1
-        self.prey_goal_distance: float = 0
-        self.puff_count = 0
-        self.predator_visible = False
+        self.prey_data = BotEvadePreyData()
 
     def __update_state__(self,
                          delta_t: float = 0):
         if self.use_predator and self.puff_cool_down <= 0:
-            self.predator_prey_distance = Point.distance(src=self.prey.state.location,
-                                                         dst=self.predator.state.location)
-            self.predator_visible = self.line_of_sight["prey"]["predator"]
-            if self.predator_visible:
-                if self.predator_prey_distance <= self.puff_threshold:
-                    self.puffed = True
-                    self.puff_count += 1
+            self.prey_data.predator_prey_distance = Point.distance(src=self.prey.state.location,
+                                                                   dst=self.predator.state.location)
+            self.prey_data.predator_visible = self.line_of_sight["prey"]["predator"]
+            if self.prey_data.predator_visible:
+                if self.prey_data.predator_prey_distance <= self.puff_threshold:
+                    self.prey_data.puffed = True
+                    self.prey_data.puff_count += 1
                     self.puff_cool_down = self.puff_cool_down_time
                     self.__dispatch__("puff", self)
 
@@ -116,11 +129,11 @@ class BotEvade(Model):
         else:
             self.puff_cool_down = 0
 
-        self.prey_goal_distance = Point.distance(src=self.goal_location,
-                                                 dst=self.prey.state.location)
+        self.prey_data.prey_goal_distance = Point.distance(src=self.goal_location,
+                                                           dst=self.prey.state.location)
 
-        if self.prey_goal_distance <= self.goal_threshold:
-            self.goal_achieved = True
+        if self.prey_data.prey_goal_distance <= self.goal_threshold:
+            self.prey_data.goal_achieved = True
             self.stop()
 
     def __on_quit__(self):
@@ -128,9 +141,9 @@ class BotEvade(Model):
 
     def reset(self):
         Model.reset(self)
-        self.goal_achieved = False
-        self.predator_visible = False
-        self.puff_count = 0
+        self.prey_data.goal_achieved = False
+        self.prey_data.predator_visible = False
+        self.prey_data.puff_count = 0
         self.__update_state__()
 
     def step(self) -> float:
