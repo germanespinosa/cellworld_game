@@ -5,7 +5,7 @@ from .model import Model
 from .coordinate_converter import CoordinateConverter
 import colorsys
 from .event import EventDispatcher
-
+import numpy as np
 
 def generate_distinct_colors(n):
     colors = []
@@ -90,3 +90,10 @@ class View(EventDispatcher):
             elif event.type == pygame.KEYUP:
                 self.__dispatch__("key_up", event.key)
         self.pressed_keys = pygame.key.get_pressed()
+
+    def get_screen(self, normalized: bool = False) -> np.ndarray:
+        screen_array = pygame.surfarray.array3d(self.screen)
+        screen_array = np.transpose(screen_array, (1, 0, 2))
+        if normalized:
+            screen_array = screen_array / 255.0
+        return screen_array
