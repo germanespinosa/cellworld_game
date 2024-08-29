@@ -1,13 +1,20 @@
 import random
+from ..agent import Agent
 from ..util import Point
 from ..model import Model
 from ..agent import AgentState, CoordinateConverter
 from ..mouse import Mouse
 from ..robot import Robot
 from ..cellworld_loader import CellWorldLoader
+import enum
 
 
 class BotEvade(Model):
+    class PointOfView(enum.Enum):
+        TOP = ""
+        PREY = "prey"
+        PREDATOR = "predator"
+
     def __init__(self,
                  world_name: str = "21_05",
                  use_predator: bool = True,
@@ -17,21 +24,24 @@ class BotEvade(Model):
                  goal_threshold: float = .1,
                  time_step: float = .025,
                  real_time: bool = False,
-                 render: bool = False):
+                 render: bool = False,
+                 point_of_view: PointOfView = PointOfView.TOP,
+                 agent_render_mode: Agent.RenderMode = Agent.RenderMode.SPRITE):
         self.use_predator = use_predator
         self.puff_cool_down_time = puff_cool_down_time
         self.puff_threshold = puff_threshold
         self.goal_location = goal_location
         self.goal_threshold = goal_threshold
         self.loader = CellWorldLoader(world_name=world_name)
-
         Model.__init__(self,
                        world_name=world_name,
                        arena=self.loader.arena,
                        occlusions=self.loader.occlusions,
                        time_step=time_step,
                        real_time=real_time,
-                       render=render)
+                       render=render,
+                       agent_point_of_view=point_of_view.value,
+                       agent_render_mode=agent_render_mode)
 
         self.register_event(event_name="puff")
 
@@ -72,8 +82,8 @@ class BotEvade(Model):
                                        center=predator_location,
                                        radius=puff_area_size,
                                        width=2)
-
-                self.view.add_render_step(render_puff_area, z_index=90)
+                if point_of_view == self.PointOfView.TOP:
+                    self.view.add_render_step(render_puff_area, z_index=90)
 
         self.puffed: bool = False
         self.puff_cool_down: float = 0

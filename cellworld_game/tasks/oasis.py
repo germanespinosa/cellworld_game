@@ -1,15 +1,22 @@
 import random
 import typing
-
 from ..util import Point
 from ..model import Model
 from ..agent import AgentState, CoordinateConverter
 from ..mouse import Mouse
 from ..robot import Robot
 from ..cellworld_loader import CellWorldLoader
+from ..agent import Agent
+import enum
 
 
 class Oasis(Model):
+
+    class PointOfView(enum.Enum):
+        TOP = ""
+        PREY = "prey"
+        PREDATOR = "predator"
+
     def __init__(self,
                  world_name: str,
                  goal_locations: typing.List[typing.Tuple[float, float]],
@@ -21,7 +28,9 @@ class Oasis(Model):
                  goal_threshold: float = .1,
                  time_step: float = .025,
                  real_time: bool = False,
-                 render: bool = False):
+                 render: bool = False,
+                 point_of_view: PointOfView = PointOfView.TOP,
+                 agent_render_mode: Agent.RenderMode = Agent.RenderMode.SPRITE):
 
         if goal_sequence_generator is None:
             goal_sequence_generator = lambda: random.sample(range(0, len(goal_locations)), 3)
@@ -44,7 +53,9 @@ class Oasis(Model):
                        occlusions=self.loader.occlusions,
                        time_step=time_step,
                        real_time=real_time,
-                       render=render)
+                       render=render,
+                       agent_render_mode=agent_render_mode,
+                       agent_point_of_view=point_of_view.value)
 
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,

@@ -5,6 +5,8 @@ from ..agent import AgentState, CoordinateConverter
 from ..mouse import Mouse
 from ..robot import Robot
 from ..cellworld_loader import CellWorldLoader
+from ..agent import Agent
+import enum
 
 
 class DualEvadePreyData:
@@ -26,6 +28,12 @@ class DualEvadePreyData:
 
 
 class DualEvade(Model):
+    class PointOfView(enum.Enum):
+        TOP = ""
+        PREY = "prey_1"
+        OTHER = "prey_2"
+        PREDATOR = "predator"
+
     def __init__(self,
                  world_name: str = "21_05",
                  use_predator: bool = True,
@@ -35,7 +43,9 @@ class DualEvade(Model):
                  goal_threshold: float = .1,
                  time_step: float = .025,
                  real_time: bool = False,
-                 render: bool = False):
+                 render: bool = False,
+                 point_of_view: PointOfView = PointOfView.TOP,
+                 agent_render_mode: Agent.RenderMode = Agent.RenderMode.SPRITE):
         self.use_predator = use_predator
         self.puff_cool_down_time = puff_cool_down_time
         self.puff_threshold = puff_threshold
@@ -49,7 +59,9 @@ class DualEvade(Model):
                        occlusions=self.loader.occlusions,
                        time_step=time_step,
                        real_time=real_time,
-                       render=render)
+                       render=render,
+                       agent_point_of_view=point_of_view.value,
+                       agent_render_mode=agent_render_mode)
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
                                   open_locations=self.loader.open_locations,
@@ -92,7 +104,8 @@ class DualEvade(Model):
                                        radius=puff_area_size,
                                        width=2)
 
-                self.view.add_render_step(render_puff_area, z_index=90)
+                if point_of_view == self.PointOfView.TOP:
+                    self.view.add_render_step(render_puff_area, z_index=90)
 
         self.puff_cool_down: float = 0
         self.prey_data_1 = DualEvadePreyData()

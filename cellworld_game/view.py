@@ -37,7 +37,6 @@ class View(EventDispatcher):
         self.screen = pygame.display.set_mode(self.coordinate_converter.screen_size)
         self.background_color = (0, 0, 0)
         self.clock = pygame.time.Clock()
-        self.show_sprites = True
         EventDispatcher.__init__(self, ["mouse_button_down",
                                         "mouse_button_up",
                                         "mouse_move",
@@ -91,7 +90,3 @@ class View(EventDispatcher):
             elif event.type == pygame.KEYUP:
                 self.__dispatch__("key_up", event.key)
         self.pressed_keys = pygame.key.get_pressed()
-
-    def on_key_down(self, key):
-        if key == pygame.K_TAB:
-            self.show_sprites = not self.show_sprites

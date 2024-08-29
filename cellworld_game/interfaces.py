@@ -75,7 +75,7 @@ class IPolygon(ABC):
     def render(self,
                surface,
                coordinate_converter: CoordinateConverter,
-               color: typing.Tuple[int, int, int]):
+               color: typing.Union[typing.Tuple[int, int, int], typing.Tuple[int, int, int, int]]):
 
         import pygame
 

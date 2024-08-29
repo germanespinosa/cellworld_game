@@ -1,5 +1,5 @@
 import random
-from cellworld_game import BotEvade, save_video_output, save_log_output
+from cellworld_game import BotEvade, save_video_output, save_log_output, Agent
 
 bot_evade = BotEvade(world_name="21_05",
                      puff_cool_down_time=.5,
@@ -8,14 +8,14 @@ bot_evade = BotEvade(world_name="21_05",
                      time_step=.025,
                      real_time=False,
                      render=True,
-                     use_predator=True)
+                     use_predator=True,
+                     point_of_view=BotEvade.PointOfView.PREY,
+                     agent_render_mode=Agent.RenderMode.POLYGON)
 
 save_video_output(bot_evade, "videos")
 save_log_output(bot_evade, "test", "logs")
-
-bot_evade.view.agent_perspective = 1
-
 bot_evade.reset()
+bot_evade.view.show_sprites = False
 
 # prey
 puff_cool_down = 0

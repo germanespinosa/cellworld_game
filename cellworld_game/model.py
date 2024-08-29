@@ -1,6 +1,7 @@
 import time
 import typing
 import shapely as sp
+
 from .agent import Agent, AgentState
 from .visibility import Visibility
 from .polygon import Polygon
@@ -16,13 +17,17 @@ class Model(EventDispatcher):
                  occlusions: typing.List[Polygon],
                  time_step: float = 0.1,
                  real_time: bool = False,
-                 render: bool = False):
+                 render: bool = False,
+                 agent_point_of_view: str = "",
+                 agent_render_mode: Agent.RenderMode = Agent.RenderMode.SPRITE):
         self.world_name = world_name
         self.arena = arena
         self.occlusions = occlusions
         self.time_step = time_step
         self.real_time = real_time
         self.render = render
+        self.agent_point_of_view = agent_point_of_view
+        self.agent_render_mode = agent_render_mode
         self.agents: typing.Dict[str, Agent] = {}
         self.visibility = Visibility(arena=self.arena, occlusions=self.occlusions)
         self.last_step = None
@@ -62,10 +67,12 @@ class Model(EventDispatcher):
                                   color=self.arena_color)
 
             self.view.add_render_step(render_step=render_arena, z_index=0)
-            self.view.add_render_step(render_step=render_occlusions, z_index=30)
+            if agent_point_of_view == "":
+                self.view.add_render_step(render_step=render_occlusions, z_index=30)
+            else:
+                self.view.add_render_step(render_step=render_occlusions, z_index=1030)
 
-            self.agent_render_mode = Agent.RenderMode.SPRITE
-            self.render_agent_visibility = ""
+            self.render_agent_visibility = agent_point_of_view
 
             def render_visibility(surface, coordinate_converter):
                 if self.render_agent_visibility == "":
@@ -74,6 +81,21 @@ class Model(EventDispatcher):
                 visibility_polygon.render(surface=surface,
                                           coordinate_converter=coordinate_converter,
                                           color=self.visibility_color)
+
+            def render_hidden_area(surface, coordinate_converter):
+                import pygame
+                if self.render_agent_visibility == "":
+                    return
+                visibility_polygon = self.agents[self.render_agent_visibility].visibility_polygon
+                mask_surface = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+                mask_surface.fill((0, 0, 0, 255))
+                self.arena.render(surface=mask_surface,
+                                  coordinate_converter=coordinate_converter,
+                                  color=self.arena_color + (255,))
+                visibility_polygon.render(surface=mask_surface,
+                                          coordinate_converter=coordinate_converter,
+                                          color=(0, 0, 0, 0))
+                surface.blit(mask_surface, (0, 0))
 
             def key_down(key):
                 import pygame
@@ -102,6 +124,8 @@ class Model(EventDispatcher):
                             agent.render_path = not agent.render_path
 
             self.view.add_render_step(render_visibility, z_index=20)
+            if agent_point_of_view:
+                self.view.add_render_step(render_hidden_area, z_index=1000)
 
             self.view.add_event_handler("key_down", key_down)
 
@@ -143,6 +167,7 @@ class Model(EventDispatcher):
     def add_agent(self, name: str, agent: Agent):
         agent.name = name
         agent.model = self
+        agent.render_mode = self.agent_render_mode
         self.register_event(f"agent_{name}_state_update")
         self.line_of_sight.register_agent(agent=agent)
         self.agents[name] = agent
