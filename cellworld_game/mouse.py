@@ -10,11 +10,13 @@ class Mouse(NavigationAgent):
     def __init__(self,
                  start_state: AgentState,
                  navigation: Navigation,
-                 view_field: float = 360):
+                 view_field: float = 360,
+                 max_forward_speed: float = 0.5,
+                 max_turning_speed: float = 20.0):
         NavigationAgent.__init__(self,
                                  navigation=navigation,
-                                 max_forward_speed=0.5,
-                                 max_turning_speed=20.0,
+                                 max_forward_speed=max_forward_speed,
+                                 max_turning_speed=max_turning_speed,
                                  view_field=view_field,
                                  size=0.04,
                                  sprite_scale=2.0,

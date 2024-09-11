@@ -44,7 +44,12 @@ class BotEvade(Model):
                  real_time: bool = False,
                  render: bool = False,
                  point_of_view: PointOfView = PointOfView.TOP,
-                 agent_render_mode: Agent.RenderMode = Agent.RenderMode.SPRITE):
+                 agent_render_mode: Agent.RenderMode = Agent.RenderMode.SPRITE,
+                 prey_max_forward_speed: float = .5,
+                 prey_max_turning_speed: float = 20.0,
+                 predator_prey_forward_speed_ratio: float = .15,
+                 predator_prey_turning_speed_ratio: float = .175,
+                 ):
         self.use_predator = use_predator
         self.puff_cool_down_time = puff_cool_down_time
         self.puff_threshold = puff_threshold
@@ -63,16 +68,20 @@ class BotEvade(Model):
 
         self.register_event(event_name="puff")
 
+        self.prey = Mouse(start_state=AgentState(location=(.05, .5),
+                                                 direction=0),
+                          navigation=self.loader.navigation,
+                          max_forward_speed=prey_max_forward_speed,
+                          max_turning_speed=prey_max_turning_speed)
+
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
                                   open_locations=self.loader.open_locations,
-                                  navigation=self.loader.navigation)
+                                  navigation=self.loader.navigation,
+                                  max_forward_speed=self.prey.max_forward_speed * predator_prey_forward_speed_ratio,
+                                  max_turning_speed=self.prey.max_turning_speed * predator_prey_turning_speed_ratio)
 
             self.add_agent("predator", self.predator)
-
-        self.prey = Mouse(start_state=AgentState(location=(.05, .5),
-                                                 direction=0),
-                          navigation=self.loader.navigation)
 
         self.add_agent("prey", self.prey)
 

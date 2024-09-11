@@ -14,11 +14,14 @@ class Robot(NavigationAgent):
                  start_locations: typing.List[Point.type],
                  open_locations: typing.List[Point.type],
                  navigation: Navigation,
-                 view_field: float = 360):
+                 view_field: float = 360,
+                 max_forward_speed: float = 0.075,
+                 max_turning_speed: float = 3.5,
+                 ):
         NavigationAgent.__init__(self,
                                  navigation=navigation,
-                                 max_forward_speed=0.075,
-                                 max_turning_speed=3.5,
+                                 max_forward_speed=max_forward_speed,
+                                 max_turning_speed=max_turning_speed,
                                  view_field=view_field,
                                  size=.05,
                                  sprite_scale=1.9,
