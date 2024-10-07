@@ -49,6 +49,7 @@ class BotEvade(Model):
                  prey_max_turning_speed: float = 20.0,
                  predator_prey_forward_speed_ratio: float = .15,
                  predator_prey_turning_speed_ratio: float = .175,
+                 max_line_of_sight_distance: float = 1.0
                  ):
         self.use_predator = use_predator
         self.puff_cool_down_time = puff_cool_down_time
@@ -64,7 +65,8 @@ class BotEvade(Model):
                        real_time=real_time,
                        render=render,
                        agent_point_of_view=point_of_view.value,
-                       agent_render_mode=agent_render_mode)
+                       agent_render_mode=agent_render_mode,
+                       max_line_of_sight_distance=max_line_of_sight_distance)
 
         self.register_event(event_name="puff")
 

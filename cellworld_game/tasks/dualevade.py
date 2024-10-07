@@ -45,7 +45,8 @@ class DualEvade(Model):
                  real_time: bool = False,
                  render: bool = False,
                  point_of_view: PointOfView = PointOfView.TOP,
-                 agent_render_mode: Agent.RenderMode = Agent.RenderMode.SPRITE):
+                 agent_render_mode: Agent.RenderMode = Agent.RenderMode.SPRITE,
+                 max_line_of_sight_distance: float = 1.0):
         self.use_predator = use_predator
         self.puff_cool_down_time = puff_cool_down_time
         self.puff_threshold = puff_threshold
@@ -61,7 +62,8 @@ class DualEvade(Model):
                        real_time=real_time,
                        render=render,
                        agent_point_of_view=point_of_view.value,
-                       agent_render_mode=agent_render_mode)
+                       agent_render_mode=agent_render_mode,
+                       max_line_of_sight_distance=max_line_of_sight_distance)
         if use_predator:
             self.predator = Robot(start_locations=self.loader.robot_start_locations,
                                   open_locations=self.loader.open_locations,

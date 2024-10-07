@@ -2,6 +2,7 @@ import time
 import typing
 import shapely as sp
 
+from .util import Point
 from .agent import Agent, AgentState
 from .visibility import Visibility
 from .polygon import Polygon
@@ -19,7 +20,8 @@ class Model(EventDispatcher):
                  real_time: bool = False,
                  render: bool = False,
                  agent_point_of_view: str = "",
-                 agent_render_mode: Agent.RenderMode = Agent.RenderMode.SPRITE):
+                 agent_render_mode: Agent.RenderMode = Agent.RenderMode.SPRITE,
+                 max_line_of_sight_distance: float = 1.0):
         self.world_name = world_name
         self.arena = arena
         self.occlusions = occlusions
@@ -28,6 +30,7 @@ class Model(EventDispatcher):
         self.render = render
         self.agent_point_of_view = agent_point_of_view
         self.agent_render_mode = agent_render_mode
+        self.max_line_of_sight_distance = max_line_of_sight_distance
         self.agents: typing.Dict[str, Agent] = {}
         self.visibility = Visibility(arena=self.arena, occlusions=self.occlusions)
         self.last_step = None
@@ -154,10 +157,14 @@ class Model(EventDispatcher):
             self.__dispatch__(f"agent_{agent_name}_state_update", agent_state)
 
         for agent_name, agent in self.agents.items():
-            agent_visibility_polygon = self.agents[agent_name].visibility_polygon
+            agent_visibility_polygon = agent.visibility_polygon
             for other_agent_name, other_agent in self.agents.items():
                 if other_agent_name != agent_name:
-                    self.line_of_sight[agent_name, other_agent_name] = agent_visibility_polygon.intersects(other_agent.body_polygon)
+                    if Point.distance(agent.state.location, other_agent.state.location) <= self.max_line_of_sight_distance:
+                        has_line_of_sight = agent_visibility_polygon.intersects(other_agent.body_polygon)
+                    else:
+                        has_line_of_sight = False
+                    self.line_of_sight[agent_name, other_agent_name] = has_line_of_sight
         self.__dispatch__("agents_states_update", agents_state, self.line_of_sight)
 
     def pause(self):
