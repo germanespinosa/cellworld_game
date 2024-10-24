@@ -14,6 +14,15 @@ bot_evade = BotEvade(world_name="00_00",
                      # point_of_view=BotEvade.PointOfView.PREY,
                      # agent_render_mode=Agent.RenderMode.POLYGON)
 
+
+def puff_processing(model):
+    print("you've been puffed")
+
+
+bot_evade.add_event_handler(event_name="puff",
+                            handler=puff_processing)
+
+
 save_video_output(bot_evade, "videos")
 save_log_output(bot_evade, "test", "logs")
 bot_evade.reset()

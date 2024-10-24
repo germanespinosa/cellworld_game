@@ -155,6 +155,7 @@ class BotEvade(Model):
         self.prey_data.goal_achieved = False
         self.prey_data.predator_visible = False
         self.prey_data.puff_count = 0
+        self.puff_cool_down = 0
         self.__update_state__()
 
     def step(self) -> float:
