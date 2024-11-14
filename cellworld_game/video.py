@@ -24,6 +24,7 @@ def save_video_output(model: Model,
             from moviepy.editor import ImageSequenceClip
             gameplay_clip = ImageSequenceClip(view.gameplay_frames, fps=int(1/model.time_step))
             gameplay_clip.write_videofile(filename=video_file,
+                                          fps=int(1/model.time_step),
                                           threads=16)
             view.gameplay_frames = []
 
